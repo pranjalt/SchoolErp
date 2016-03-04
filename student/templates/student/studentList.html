@@ -1,0 +1,631 @@
+{% load table_tags %}
+{% load staticfiles %}
+<link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+<!-- <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css"> -->
+<script src="{% static 'js/jquery-2.1.4.min.js' %}"></script> 
+<script src="{% static 'js/bootstrap.min.js' %}"></script>
+<script src="{% static 'js/commonUtils.js' %}"></script>
+
+        
+
+<style type="text/css">
+
+ .modal.modal-wide .modal-dialog {
+  width: 80%;
+}
+.modal-wide .modal-body {
+  overflow-y: auto;
+}
+</style>
+
+<script>
+$(document).ready(function(){
+	
+	document.getElementById("select_image_btn").onchange = function () {
+	    var reader = new FileReader();
+
+	    reader.onload = function (e) {
+	        // get loaded data and render thumbnail.
+	        document.getElementById("student_image").src = e.target.result;
+	    }; 
+	    // read the image file as a data URL.
+	    reader.readAsDataURL(this.files[0]);
+	};
+	
+	$("input").prop("data-fv-notempty",true)
+		
+	$('#idClass').addClass('form-control');
+	$('#idClass').prop("disabled", true);
+	$('#idSection').prop("disabled",true);
+	$('#addStudentModal').on('hidden.bs.modal', function () {
+		   tab_handler('Students');
+	});
+	
+	$('#deleteStudModal').on('hidden.bs.modal', function () {
+		   tab_handler('Students');
+	});
+	
+	$("#idBatch").on("change", function() { 
+		selectedOpt=$(this).find(':selected').val();
+		alert(selectedOpt);
+		getClassesValue(selectedOpt);	
+	} );
+	
+	$("#idClass").on("change", function() { 
+		selectedOpt=$(this).find(':selected').val();
+		alert(selectedOpt);
+		getSectionValue(selectedOpt);
+		
+		//for first occured value in opt before onchange fun
+		
+	} );
+	
+	$("#idSection").on("change", function() { 
+		var section = $("#idSection option:selected").val();
+		$('#bcsId').val(section);
+	});
+	
+	$(".fa-file-text").on("click", function() {
+		alert("hit view");
+		$('#addStudentModal').modal('show'); 	
+		studentId = $(this).closest('tr').find('td:eq(0)').html();
+		var url= '/viewStudent/'+'?studentId='+studentId;
+		studentFun(url);
+		viewOnlyAccess();
+		
+	});
+	
+	$(".fa-trash-o").on("click", function() {
+		alert("hit delete");
+		studentId = $(this).closest('tr').find('td:eq(0)').html();
+		$("#yesDelStudent").on("click", function(){
+			var url = '/deleteStudent/'+'?studentId='+studentId;
+		 	$
+			.ajax({
+				url : url,
+				type : "GET",
+				dataType : {},}) 
+			    .done(function(data) {
+			    	alert("after delete");
+			    	
+			});
+		});
+	  });
+	
+	$('.fa-edit').on("click",function(){
+		alert("hit edit");
+		$('#myModalLabel').html('Edit School');
+		$('#addStudentModal').modal('show');
+		studentId = $(this).closest('tr').find('td:eq(0)').html();
+		var url= '/viewStudent/'+'?studentId='+studentId;
+		studentFun(url);
+		$('#action_type').val("edit");
+		
+		
+	});
+	
+	
+	
+		
+});
+
+
+function saveFunc() {
+	
+	$('#studentForm').submit()
+	return;
+	 var formData = $('#studentForm').serialize();
+     var url =  $('#studentForm').attr('action');
+     $.post(url,formData, function (data) {
+    	 console.log(data); 
+    	 alert("success");
+     });  
+}
+
+/* function updateFunc() {
+	
+	 var formData = $('#studentForm').serialize();
+     var url =  $('#studentForm').attr('action');
+     $.post(url,formData, function (data) {
+    	 console.log(data);
+     });	
+     
+} */
+
+
+function viewOnlyAccess()
+{
+	$('#id_firstName').prop("disabled", true);
+	$('#id_lastName').prop("disabled", true);
+	$('#id_dateOfBirth').prop("disabled", true);
+	$('#id_gender').prop("disabled", true);
+	$('#id_contactNo').prop("disabled", true);
+	$('#id_aadhaarNo').prop("disabled", true);
+	$('#id_admissionNo').prop("disabled", true);
+	$('#id_dateOfAdmission').prop("disabled", true);
+	$('#id_category').prop("disabled", true);
+	$('#id_motherTongue').prop("disabled", true);
+	$('#id_fatherName').prop("disabled", true);
+	$('#id_motherName').prop("disabled", true);
+	$('#id_guardianName').prop("disabled", true);
+	$('#id_fatherContactNo').prop("disabled", true);
+	$('#id_motherContactNo').prop("disabled", true);
+	$('#id_guardianContactNo').prop("disabled", true);
+	$('#id_fatherEmailAddr').prop("disabled", true);
+	$('#id_motherEmailAddr').prop("disabled", true);
+	$('#id_guardianEmailAddr').prop("disabled", true);
+	$('#id_tempflatNo').prop("disabled", true);
+	$('#id_tempstreet1').prop("disabled", true);
+	$('#id_tempstreet2').prop("disabled", true);
+	$('#id_tempcity').prop("disabled", true);
+	$('#id_temppincode').prop("disabled", true);
+	$('#id_tempstate').prop("disabled", true);
+	$('#id_flatNo').prop("disabled", true);
+	$('#id_street1').prop("disabled", true);
+	$('#id_street2').prop("disabled", true);
+	$('#id_city').prop("disabled", true);
+	$('#id_pincode').prop("disabled", true);
+	$('#id_state').prop("disabled", true);
+	$('#idBatch').prop("disabled", true);
+	$('#idClass').prop("disabled", true);
+	$('#idSection').prop("disabled", true);
+	$('#saveStudBtn').hide();
+	$('.readOnlyClass').prop('disabled',true);
+	
+}
+
+function studentFun(url)
+{
+	$
+	.ajax({
+		url : url,
+		type : "GET",
+		dataType : 'json',}) 
+		.done(function(data) {
+				
+	          		$('#student_id').val(data.student.student_id);
+	          		$('#parent_id').val(data.parent.parent_id);	          		
+	          		$('#id_firstName').val(data.student.firstName);
+	          		
+	          		console.log(data.student.student_pic);
+	          		$('#student_image').attr('src','/' +data.student.student_pic);
+	          		
+	          		$('#id_lastName').val(data.student.lastName);	          		
+	          		$('#id_dateOfBirth').val(data.student.dateOfBirth);	          		
+	          		$('#id_gender').val(data.student.gender);	          		
+	          		$('#id_contactNo').val(data.student.contactNo);	          		
+	          		$('#id_aadhaarNo').val(data.student.aadhaarNo);	          		
+	          		$('#id_admissionNo').val(data.student.admissionNo);	          		
+	          		$('#id_dateOfAdmission').val(data.student.dateOfAdmission);	          			          		
+	          		$('#id_category').val(data.student.category);	          		
+	          		$('#id_motherTongue').val(data.student.motherTongue);	          		
+	          		$('#id_fatherName').val(data.parent.fatherName);	          		
+	          		$('#id_motherName').val(data.parent.motherName);	          		
+	          		$('#id_guardianName').val(data.parent.guardianName);	          		
+	          		$('#id_fatherContactNo').val(data.parent.fatherContactNo);	          		
+	          		$('#id_motherContactNo').val(data.parent.motherContactNo);	          		
+	          		$('#id_guardianContactNo').val(data.parent.guardianContactNo);	          		
+	          		$('#id_fatherEmailAddr').val(data.parent.fatherEmailAddr);	          			          		
+	          		$('#id_motherEmailAddr').val(data.parent.motherEmailAddr);	          			          		
+	          		$('#id_guardianEmailAddr').val(data.parent.guardianEmailAddr);	          			          		
+	          		/*addre  */	          
+	          		$('#id_tempflatNo').val(data.tAddr.flatNo);	          			          		
+	          		$('#id_tempstreet1').val(data.tAddr.street1);	          			          		
+	          		$('#id_tempstreet2').val(data.tAddr.street2);	          			          		
+	          		$('#id_tempcity').val(data.tAddr.city);	          			          		
+	          		$('#id_temppincode').val(data.tAddr.pincode);	          			          		
+	          		$('#id_tempstate').val(data.tAddr.state);	          		
+	          		/* Paddr */	          
+	          		$('#id_flatNo').val(data.pAddr.flatNo);	          			          		
+	          		$('#id_street1').val(data.pAddr.street1);	          			          		
+	          		$('#id_street2').val(data.pAddr.street2);	          			          		
+	          		$('#id_city').val(data.pAddr.city);	          			          		
+	          		$('#id_pincode').val(data.pAddr.pincode);	          			          		
+	          		$('#id_state').val(data.pAddr.state);
+	          		
+	          		/* Previous Institute Address  */
+	          		$('#id_PrevIntflatNo').val(data.pInstituteAddr.flatNo);	          			          		
+	          		$('#id_PrevIntstreet1').val(data.pInstituteAddr.street1);	          			          		
+	          		$('#id_PrevIntstreet2').val(data.pInstituteAddr.street2);	          			          		
+	          		$('#id_PrevIntcity').val(data.pInstituteAddr.city);	          			          		
+	          		$('#id_PrevIntpincode').val(data.pInstituteAddr.pincode);	          			          		
+	          		$('#id_PrevIntstate').val(data.pInstituteAddr.state);
+	          		
+	          		/* Previous Institute Details */
+	     
+	          		$('#previous_institute_id').val(data.pIntituteDetails.previous_institute_id);
+	          		$('#id_institute_name').val(data.pIntituteDetails.institute_name);
+	          		$('#id_last_class_attended').val(data.pIntituteDetails.last_class_attended);
+	          		$('#id_duration').val(data.pIntituteDetails.duration);
+	          		
+	          		
+	          		$('#bcsId').val(data.student.batch_class_sec);
+	          		
+	          	  	//fun of view &edit batch class section pending
+	          		$('#idClass').append('<option selected=selected  value=' + data.classVal.class_id + '>'+data.classVal.class_field+'</option>');
+	          		$('#idSection').append('<option selected=selected value=' + data.section.section_id + '>'+data.section.section+'</option>');
+	          		$('#idBatch').append('<option selected=selected value=' + data.batch.batch_id + '>'+data.batch.batch+'</option>');
+					
+	          		$('#select_image_btn').prop('disabled',true)
+	
+		});
+	
+}
+
+</script>
+<div class="col-md-3 col-sm-6 col-xs-12" style="float: right;width:30%"
+ data-toggle="modal" data-target="#addStudentModal">
+ <div class="info-box">
+  <span class="info-box-icon bg-green"><i
+   class="fa fa-plus-circle"></i></span>
+		
+  <div class="info-box-content" id="addStudent" style="padding: 34px 58px; margin-left: 70px;width: 100%;">
+   <span class="info-box-text">Add Student</span>
+  </div>
+  <!-- /.info-box-content -->
+ </div>
+ <!-- /.info-box -->
+</div>
+
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteStudModal" tabindex="-1" role="dialog"
+	aria-labelledby="myModalLabel">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal"
+					aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+				<h4 class="modal-title" id="myModalLabel">Are you sure you want
+					to Delete the student Record ?</h4>
+			</div>
+			<div class="modal-body">
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" id="yesDelStudent"
+						data-dismiss="modal">Yes</button>
+					<button type="button" class="btn btn-primary" id="noDelStudent" name="no"
+						data-dismiss="modal">No</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Add School Modal -->
+<div class="modal fade modal-wide" id="addStudentModal" tabindex="-1" role="dialog"
+ aria-labelledby="myModalLabel">
+ <div class="modal-dialog" role="document">
+  <div class="modal-content">
+   <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal"
+     aria-label="Close">
+     <span aria-hidden="true">&times;</span>
+    </button>
+    <h4 class="modal-title" id="myModalLabel">View Student Details</h4>   </div>
+   <div class="modal-body">
+    <form role="form" id="studentForm" method="POST" action="{% url 'student' %}"  enctype="multipart/form-data">
+    <input type="hidden" name="action_type" id="action_type" value="add"/>
+    <input type="hidden" name="student_id" id="student_id" value=""/>
+    <input type="hidden" name="parent_id" id="parent_id" value=""/>
+    <input type="hidden" name="previous_institute_id" id="previous_institute_id" value=""/>
+     {% csrf_token %}
+     <!-- {{ AddressFormSet.management_form }} -->
+     <!-- text input -->
+     <div id="loadForm">
+	     <div class="container">
+				<div class="col-lg-12">
+					<div class="row">
+							
+								<div class="col-sm-12">
+									<div class="row">
+										<div class="col-sm-3 form-group">
+											  
+											   <label>Upload Image</label>
+											   <div class="fileupload">
+											   		<input type="file"  id ="select_image_btn" name="student_image_file"/>
+											   		<img id="student_image" name="stuent_image" style="width:170px;height:170px; border:1px solid black"/>	
+											   </div>
+								
+										</div>
+										
+											<div class="col-sm-3 form-group">
+												  <label>First Name</label>
+												   {{form.firstName}}
+												   
+												  
+											<div class="col-sm-13 form-group" style="margin-top:80px">
+											  <label>Gender</label>
+											   {{form.gender}}
+											</div>
+												   	   
+											</div>
+											<div class="col-sm-3 form-group" >
+												  <label>Last Name</label>
+												   {{form.lastName}}
+												   
+											<div class="col-sm-13 form-group" style="margin-top:80px">
+											  <label>Date Of Birth</label>
+											   {{form.dateOfBirth}}		   								
+											</div>
+												  
+											</div>
+										
+										
+									</div>
+									
+									<!-- <div class="row">
+										<div class="col-sm-3 form-group">
+											  <label>Gender</label>
+											   {{form.gender}}
+										</div>
+										<div class="col-sm-3 form-group">
+											  <label>Date Of Birth</label>
+											   {{form.dateOfBirth}}		   								
+										</div>
+									</div> -->
+									
+									<div class="row">
+										<div class="col-sm-3 form-group">
+											  <label>Contact Number</label>
+											   {{form.contactNo}}
+										</div>
+										<div class="col-sm-3 form-group">
+											  <label>Aadhar Number</label>
+											   {{form.aadhaarNo}}
+										</div>
+										<div class="col-sm-3 form-group">
+											  <label>Mother Tongue</label>
+											   {{form.motherTongue}}
+										</div>
+									</div>
+										
+									
+									<div class="row form-group">
+										<label> Academics Details</label>
+									</div>
+									
+									
+									
+									<div class="row">
+										<div class="col-sm-3 form-group">
+											  <label>Addmission Number</label>
+											   {{form.admissionNo}}
+										</div>
+										
+										<div class="col-sm-3 form-group">
+											  <label>Date of Addmission</label>
+											   {{form.dateOfAdmission}}
+										</div>
+										
+										<div class="col-sm-3 form-group">
+											  <label>Category</label>
+											   {{form.category}}
+										</div>
+									</div>
+									
+									<div class="row">
+										<div class="col-sm-3 form-group">
+											  <label>Batch</label>
+											   {{batchForm.batch}}
+										</div>
+										<div class="col-sm-3 form-group">
+											  <label>Class</label>
+											   {{classForm.grade_id}}
+										</div>
+										
+										<div class="col-sm-3 form-group">
+											  <label>Section</label>
+											   {{secForm.section}}
+										</div>
+											{{form.batch_class_sec}} 
+									 <input type="hidden"  id="bathClassSecId" value="">
+									</div>
+									
+									
+									
+									<div class="row form-group">
+										<label> Parents Details</label>
+									</div>
+									
+									<div class="row">
+										<div class="col-sm-3 form-group">
+											  <label>Fathers Name</label>
+											   {{parForm.fatherName}}
+										</div>
+										<div class="col-sm-3 form-group">
+											  <label>Mothers Name</label>
+											   {{parForm.motherName}}
+										</div>
+										<div class="col-sm-3 form-group">
+											  <label>guardians Name</label>
+											   {{parForm.guardianName}}
+										</div>
+									</div>							
+									
+									<div class="row">
+										<div class="col-sm-3 form-group">
+											  <label>Fathers Contact Number</label>
+											   {{parForm.fatherContactNo}}
+										</div>
+										<div class="col-sm-3 form-group">
+											  <label>Mothers Contact Number</label>
+											   {{parForm.motherContactNo}}
+										</div>
+										<div class="col-sm-3 form-group">
+											  <label>guardians Contact Number</label>
+											   {{parForm.guardianContactNo}}
+										</div>
+									</div>
+									
+									<div class="row">
+										<div class="col-sm-3 form-group">
+											  <label>Fathers EmailId</label>
+											   {{parForm.fatherEmailAddr}}
+										</div>
+										<div class="col-sm-3 form-group">
+											  <label>Mothers EmailId</label>
+											   {{parForm.motherEmailAddr}}
+										</div>
+										<div class="col-sm-3 form-group">
+											  <label>guardians EmailId</label>
+											   {{parForm.guardianEmailAddr}}
+										</div>
+									</div>
+									
+									<div class="row form-group">
+										<label> Temporary Address</label>
+									</div>
+									<div class="row">
+										<div class="col-sm-3 form-group">
+											  <label>Flat Number</label>
+											   {{tempAddrForm.tempflatNo}}
+										</div>
+										<div class="col-sm-3 form-group">
+											  <label>Street Number 1</label>
+											   {{tempAddrForm.tempstreet1}}
+										</div>
+										<div class="col-sm-3 form-group">
+											  <label>Street Number 2</label>
+											   {{tempAddrForm.tempstreet2}}
+										</div>
+									</div>
+									
+									<div class="row">
+										<div class="col-sm-3 form-group">
+											  <label>City</label>
+											   {{tempAddrForm.tempcity}}
+										</div>
+										<div class="col-sm-3 form-group">
+											  <label>Pincode</label>
+											   {{tempAddrForm.temppincode}}
+										</div>
+										<div class="col-sm-3 form-group">
+											  <label>State</label>
+											   {{tempAddrForm.tempstate}}
+										</div>
+									</div>
+									
+									
+									<div class="row form-group">
+										<label> Permanant Address :</label>
+									</div>
+									<div class="row">
+										<div class="col-sm-3 form-group">
+											  <label>Flat Number</label>
+											   {{PermAddrForm.flatNo}}
+										</div>
+										<div class="col-sm-3 form-group">
+											  <label>Street Number 1</label>
+											   {{PermAddrForm.street1}}
+										</div>
+										<div class="col-sm-3 form-group">
+											  <label>Street Number 2</label>
+											   {{PermAddrForm.street2}}
+										</div>
+									</div>
+									
+									<div class="row">
+										<div class="col-sm-3 form-group">
+											  <label>City</label>
+											   {{PermAddrForm.city}}
+										</div>
+										<div class="col-sm-3 form-group">
+											  <label>Pincode</label>
+											   {{PermAddrForm.pincode}}
+										</div>
+										<div class="col-sm-3 form-group">
+											  <label>State</label>
+											   {{PermAddrForm.state}}
+										</div>
+									</div>
+									<div class="row form-group">
+										<label> Previous Institute Detials :</label>
+									</div>
+									
+									<div class="row">
+										<div class="col-sm-3 form-group">
+											  <label>Institute Name</label>
+											   {{pIntituteDetailsForm.institute_name}}
+										</div>
+										<div class="col-sm-3 form-group">
+											  <label>Last Class Attended there</label>
+											   {{pIntituteDetailsForm.last_class_attended}}
+										</div>
+										<div class="col-sm-3 form-group">
+											  <label>Duration</label>
+											   {{pIntituteDetailsForm.duration}}
+											   
+										</div>
+									</div>
+									
+									<div class="row">
+										<div class="col-sm-3 form-group">
+											  <label>Institute Address :</label> 
+											  {{pInstituteAddrFrom.pInstituteflatNo}}	  
+										</div>
+										
+										<div class="col-sm-3 form-group">
+											  <label>Street Number 1</label>
+											   {{pInstituteAddrFrom.pInstitutestreet1}}
+										</div>
+										<div class="col-sm-3 form-group">
+											  <label>Street Number 2</label>
+											   {{pInstituteAddrFrom.pInstitutestreet2}}
+										</div>
+									</div>
+									
+									<div class="row">
+										<div class="col-sm-3 form-group">
+											  <label>City</label>
+											   {{pInstituteAddrFrom.pInstitutecity}}
+										</div>
+										<div class="col-sm-3 form-group">
+											  <label>Pincode</label>
+											   {{pInstituteAddrFrom.pInstitutepincode}}
+										</div>
+										<div class="col-sm-3 form-group">
+											  <label>State</label>
+											   {{pInstituteAddrFrom.pInstitutestate}}
+										</div>
+									</div>
+									
+									
+							</div>
+							
+					</div>
+				</div>
+			</div>	     
+     </div>
+     <div class="modal-footer">
+      <button type="button" class="btn btn-default" id="idClose" data-dismiss="modal">Close</button>
+      <button type="button" class="btn btn-primary" id="saveStudBtn" name="save" onClick="saveFunc();" data-dismiss="modal">Save</button>
+      
+     </div>
+    </form> 
+   </div>
+
+  </div>
+ </div>
+</div>
+
+
+<!-- Main content -->
+<section class="content">
+ <div class="row">
+  <div class="col-xs-12">
+   <div class="box">
+    <div class="box-header">
+     <h3 class="box-title">List of Student</h3>
+    </div>
+    <!-- /.box-header -->
+    <div class="box-body">{%render_table student%}</div>
+    <!-- /.box-body -->
+   </div>
+   <!-- /.box -->
+  </div>
+  <!-- /.col -->
+ </div>
+ <!-- /.row -->
+</section>

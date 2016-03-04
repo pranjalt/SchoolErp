@@ -1,0 +1,447 @@
+{% load table_tags %}
+<script type="text/javascript">
+$('#deleteModal').on('hidden.bs.modal', function() {
+	tab_handler('Exam Assign');
+})
+$('#examAssignedModal').on('hidden.bs.modal', function() {
+	tab_handler('Exam Assign');
+})
+
+var examAssignCode;
+$('#examAssignedModal')
+		.on(
+				'shown.bs.modal',
+				function() {
+					$("#selectClass").empty();
+					$("#selectSubject").empty();
+					//$("#selectExamType").empty();
+					$("#selectSyllabus").empty();
+					$("#selectTopic").empty();
+					$("#fromTime").empty();
+					$("#toTime").empty();
+					$("#date").empty();
+					$("#day").empty();
+					$
+							.ajax({
+								type : "GET",
+								url : "/getClassDetails/",
+								dataType : "json",
+							})
+							.done(
+									function(data) {
+										$("#selectClass").append(
+												$('<option></option>').val(
+														0).html(
+														"Please Select"));
+										var classList = data.classList;
+										for (i = 0; i < classList.length; i++) {
+											var _class = classList[i];
+											$("#selectClass")
+													.append(
+															$(
+																	'<option></option>')
+																	.val(
+																			_class.pk)
+																	.html(
+																			_class.fields.class_field));
+										}
+										/* $("#selectExamType").append(
+												$('<option></option>').val(
+														0).html(
+														"Please Select"));
+										var examTypeList = data.examTypeList;
+										for (i = 0; i < examTypeList.length; i++) {
+											var _examType = examTypeList[i];
+											$("#selectExamType")
+													.append(
+															$(
+																	'<option></option>')
+																	.val(
+																			_examType.pk)
+																	.html(
+																			_examType.fields.exam_type));
+										} */
+									});
+					if (method == "edit" || method == "view" ){
+						var url = '/viewExamAssign/'+'?examAssignCode='+examAssignCode;
+						 $
+						 .ajax({
+						 url : url,
+						 type : "GET",
+						 dataType : 'json',}) 
+						 .done(function(data) {
+						
+						 $.each(data,function(key,value){
+							 alert("comgin in each fnctions"+value.grades.class_id);
+							 class_id = value.grades.class_id;
+							 alert(class_id+"asdadsasd")
+							 $("#selectClass").val(class_id); 
+							 $.ajax({
+									type : "GET",
+									url : "/getClassSubject/",
+									data : {
+										"class_id" : class_id
+									},
+									dataType : "json",
+								}).done(
+										function(data) {
+											$("#selectSubject").append(
+													$('<option></option>').val(0).html(
+															"Please Select"));
+											alert(data.subjectList1+"data.subjectList1");
+											var subjectList = data.subjectList1;
+											for (i = 0; i < subjectList.length; i++) {
+												var _subject = subjectList[i];
+												$("#selectSubject").append(
+														$('<option></option>').val(_subject.pk)
+																.html(_subject.fields.subject));
+											}
+											subject_id = value.subjects.subject_id
+											$("#selectSubject").val(subject_id);
+											$.ajax({
+												type : "GET",
+												url : "/getSyllabus/",
+												data : {
+													"class_id" : class_id,
+													"subject_id" : subject_id
+												},
+												dataType : "json",
+											}).done(
+													function(data) {
+														$("#selectSyllabus").append(
+																$('<option></option>').val(0).html(
+																		"Please Select"));
+														
+														var sylList = data.sylList;
+														for (i = 0; i < sylList.length; i++) {
+															var _syl = sylList[i];
+															$("#selectSyllabus").append(
+																	$('<option></option>').val(_syl.pk)
+																			.html(_syl.fields.syllabus));
+														}
+														syllabus_id = value.syllabus.syllabus_id
+														$("#selectSyllabus").val(syllabus_id);
+														$.ajax({
+															type : "GET",
+															url : "/getExamType/",
+															data : {
+																"class_id" : class_id,
+																"subject_id" :subject_id,
+																"syllabus_id" : syllabus_id
+															},
+															dataType : "json",
+														}).done(
+																function(data) {
+																	alert(data);
+																	$("#examType").val(data.examType.exam_type);
+																	$("#examTypeId").val(data.examType.exam_type_id);
+																	alert(data.examType.exam_type_id+"data.examType.exam_type_id");
+																});
+													});
+								
+								
+							});
+							 from_time = $("#fromTime").val(value.from_time);
+							 to_time = $("#toTime").val(value.to_time);
+							 day = $("#day").val(value.day);
+							 date = $("#date").val(value.date);
+						 });
+						 });
+						}
+				});
+				
+/* code for view  */
+$(".fa-file-text").on("click", function() {
+	 alert("in view");
+examAssignCode = $(this).closest('tr').find('td:eq(0)').html();
+method = 'view';
+$("#method").val('view');
+$('.saveExamAssigned').hide();
+$("#myModalLabel").html('Exam Assigned Details');
+$('#selectClass').prop("disabled", true);
+$('#selectSubject').prop("disabled", true);
+$('#examType').prop("disabled", true);
+$('#selectSyllabus').prop("disabled", true);
+$('#fromTime').prop("disabled", true);
+$('#toTime').prop("disabled", true);
+$('#date').prop("disabled", true);
+$('#day').prop("disabled", true);
+$('#examAssignedModal').modal('show');   
+});
+
+
+/* code for edit */
+	$(".fa-edit").on("click", function() {
+		examAssignCode = $(this).closest('tr').find('td:eq(0)').html();
+		$("#method").val('edit');
+		method = 'edit';
+		$("#myModalLabel").html('Edit Exam Assign');
+		$(".saveExamAssigned").html('Edit');
+		$('#examType').prop('disabled',true);
+		$('#examAssignedModal').modal('show');  
+	  });
+	  
+/* code for on change of class */
+$('#selectClass').on(
+		"change",
+		function() {
+			$("#selectSubject").empty();
+			var class_id = $(this).val();
+			$.ajax({
+				type : "GET",
+				url : "/getClassSubject/",
+				data : {
+					"class_id" : class_id
+				},
+				dataType : "json",
+			}).done(
+					function(data) {
+						$("#selectSubject").append(
+								$('<option></option>').val(0).html(
+										"Please Select"));
+						alert(data.subjectList1+"data.subjectList1");
+						var subjectList = data.subjectList1;
+						for (i = 0; i < subjectList.length; i++) {
+							var _subject = subjectList[i];
+							$("#selectSubject").append(
+									$('<option></option>').val(_subject.pk)
+											.html(_subject.fields.subject));
+						}
+					
+					});
+		});
+		
+$('#selectSyllabus').on(
+		"change",
+		function() {
+			$("#examType").empty();
+			var class_id = $("#selectClass option:selected").val();
+			var subject_id = $("#selectSubject option:selected").val();
+			var syllabus_id = $("#selectSyllabus option:selected").val();
+			$.ajax({
+				type : "GET",
+				url : "/getExamType/",
+				data : {
+					"class_id" : class_id,
+					"subject_id" :subject_id,
+					"syllabus_id" : syllabus_id
+				},
+				dataType : "json",
+			}).done(
+					function(data) {
+						alert(data);
+						$("#examType").val(data.examType.exam_type);
+						$("#examTypeId").val(data.examType.exam_type_id);
+						alert(data.examType.exam_type_id+"data.examType.exam_type_id");
+					});
+		});
+ $('#selectSubject').on(
+		"change",
+		function() {
+			$("#selectSyllabus").empty();
+			var class_id = $('#selectClass option:selected').val();
+			var subject_id = $('#selectSubject option:selected').val();
+			$.ajax({
+				type : "GET",
+				url : "/getSyllabus/",
+				data : {
+					"class_id" : class_id,
+					"subject_id" : subject_id
+				},
+				dataType : "json",
+			}).done(
+					function(data) {
+						$("#selectSyllabus").append(
+								$('<option></option>').val(0).html(
+										"Please Select"));
+						
+						var sylList = data.sylList;
+						for (i = 0; i < sylList.length; i++) {
+							var _syl = sylList[i];
+							$("#selectSyllabus").append(
+									$('<option></option>').val(_syl.pk)
+											.html(_syl.fields.syllabus));
+						}
+					});
+		}); 
+
+ $(".saveExamAssigned").on("click", function() {
+	 
+	 var method = $("#method").val();
+	
+	 class_name = $("#selectClass option:selected").val();
+	 exam_type = $("#examTypeId").val();
+	 alert("exam_type"+exam_type);
+	 subject = $("#selectSubject option:selected").val();
+	 syllabus = $("#selectSyllabus option:selected").html();
+	 from_time = $("#fromTime").val();
+	 to_time = $("#toTime").val();
+	 date = $("#date").val();
+	 day = $("#day").val();
+	 alert("comingin saveexamassign"+method+class_name+exam_type+subject+from_time+to_time+date+day);
+	 if(method=='add'){
+	 var data = {class_name:class_name,exam_type:exam_type,subject:subject,syllabus:syllabus,from_time:from_time,to_time:to_time,date:date,day:day, method};
+	 }else if(method == 'edit'){
+	 var data = {examAssignCode:examAssignCode,class_name:class_name,exam_type:exam_type,subject:subject,syllabus:syllabus,from_time:from_time,to_time:to_time,date:date,day:day, method};
+	 } 
+	 var url = '/assignExams/';
+	 $
+	 .ajax({
+	 url : url,
+	 type : "POST",
+	 dataType: "json",
+	 data : data,
+	 success : function(result) {
+	 alert('hi i am '+result);
+	 },
+	 error : function(result) {
+	 alert('hi i am giving weero'+result);
+	 }
+	 });
+	 }); 
+
+ //delete code
+  $(".fa-trash-o").on("click", function() {
+	 examAssignId = $(this).closest('tr').find('td:eq(0)').html();
+	 $("#delExamAssign").on("click", function(){
+	 var url = '/delExamAssign/'+'?examAssignId='+examAssignId;
+	 $
+	 .ajax({
+	 url : url,
+	 type : "GET",
+	 dataType : {},}) 
+	 .done(function(data) {
+	 });
+	 });
+	 });
+ 
+$("#addDiv").on("click", function(){
+		$("#method").val('add');
+		method = 'add';
+	});
+</script>
+
+<div class="col-md-3 col-sm-6 col-xs-12" style="float: right;"
+	data-toggle="modal" data-target="#examAssignedModal" id="addDiv">
+	<div class="info-box">
+		<span class="info-box-icon bg-green"><i
+			class="fa fa-plus-circle"></i></span>
+
+		<div class="info-box-content" id="assignExams">
+			<span class="info-box-text">Assign Exams</span>
+		</div>
+
+	</div>
+
+</div>
+<!-- Add Exam Assigned Modal -->
+<div class="modal fade" id="examAssignedModal" tabindex="-1"
+	role="dialog" aria-labelledby="myModalLabel">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal"
+					aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+				<h4 class="modal-title" id="myModalLabel">Assign New Exam</h4>
+			</div>
+			<div class="modal-body">
+				<div class="form-group">
+					<label>Select Class</label> <select class="form-control"
+						id="selectClass">
+
+					</select>
+				</div>
+				<div class="form-group">
+					<label>Select Subject</label> <select class="form-control"
+						id="selectSubject">
+
+					</select>
+				</div>
+				<div class="form-group">
+					<label>Select Chapter</label> <select class="form-control"
+						id="selectSyllabus">
+
+					</select>
+				</div>
+				<!-- <div class="form-group">
+					<label>Select Topic</label> <select class="form-control"
+						id="selectTopic">
+
+					</select>
+				</div> -->
+				<div class="form-group">
+					<label>Exam Type</label> <!-- <select class="form-control"
+						id="selectExamType">
+
+					</select> -->
+					<input type="text" id="examType" class="form-control">
+					<input type="hidden" id="examTypeId" class="form-control" value="">
+				</div>
+				<div class="form-group">
+					<label>From Time</label> <input type="time" class="form-control"
+						placeholder="Enter From Time" name="fromTime" id="fromTime">
+					<input type="hidden" id="method" value="add">
+				</div>
+				<label>To Time</label> <input type="time" class="form-control"
+					placeholder="Enter To Time" name="toTime" id="toTime"> <label>Date</label>
+				<input type="date" class="form-control" placeholder="Enter Date"
+					name="date" id="date"> <label>Day</label> <input
+					type="text" class="form-control" placeholder="Enter Day" name="day"
+					id="day">
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-primary saveExamAssigned"
+						name="save" data-dismiss="modal">Save</button>
+				</div>
+				</form>
+			</div>
+
+		</div>
+	</div>
+</div>
+<!-- delete modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog"
+	aria-labelledby="myModalLabel">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal"
+					aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+				<h4 class="modal-title" id="myModalLabel">Are you sure you want
+					to Delete the Record ?</h4>
+			</div>
+			<div class="modal-body">
+				<div class="modal-footer">
+					<button type="submit" class="btn btn-default" id="delExamAssign"
+						data-dismiss="modal">Yes</button>
+					<button type="button" class="btn btn-primary" name="no"
+						data-dismiss="modal">No</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Main content -->
+<section class="content">
+	<div class="row">
+		<div class="col-xs-12">
+			<div class="box">
+				<div class="box-header">
+					<h3 class="box-title">List of Exams</h3>
+				</div>
+				<!-- /.box-header -->
+				<div class="box-body">{% render_table examAssignList %}</div>
+				<!-- /.box-body -->
+			</div>
+			<!-- /.box -->
+		</div>
+		<!-- /.col -->
+	</div>
+	<!-- /.row -->
+</section>
+<!-- /.content -->

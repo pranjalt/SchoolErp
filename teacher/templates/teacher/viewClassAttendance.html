@@ -1,0 +1,257 @@
+{% load table_tags %}
+{% load staticfiles %}
+<link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+<script src="{% static 'js/jquery-2.1.4.min.js' %}"></script>
+<script src="{% static 'js/bootstrap.min.js' %}"></script>
+<script src="{% static 'js/commonUtils.js' %}"></script>
+
+<script>
+
+var teacher_id = 25;
+var batchClassId = [];
+var batchClassSecId = [];
+$(document).ready(function(){
+teacherId = window.teacher_id;
+	var url = '/getBatchClassSecIdbyTeacher/'+'?teacher_id='+teacher_id;
+	alert(url);
+	$.ajax({
+		  method: "GET",
+		  url: url,
+		  data: {},
+		  dataType:'json',
+		})
+		 .done(function( data ) {
+		  var i =0;
+		 $.each(data,function(key,value){
+		  batchClassId[i] = value.batch_class_sec.batch_class;
+		  batchClassSecId[i] = value.batch_class_sec.batch_class_section_id;
+		  alert("batchClassId's are in 1st -- " + batchClassId);
+		  alert("batchClassSecId's are in 1st -- " + batchClassSecId);
+		  i++;
+		 });
+		 getClassByBatchClassId(batchClassId);
+    });
+
+});	
+
+
+var classID = [];
+var className = [];
+function getClassByBatchClassId(batchClassId){
+alert("In Function getClassByBatchClassId");
+var bacthClass = window.batchClassId;
+alert("This are bacthClass in getClassByBatchClassId -- " + bacthClass);
+url = '/getClassbyBacthClassId/';
+data = {'bacthClass[]':bacthClass};
+alert(url);
+	$.ajax({
+		  method: "GET",
+		  url: url,
+		  data: data,
+		  dataType:'json',
+		})
+		 .done(function( data ) {
+		 $("#classList").empty();
+		 $("#classList").append(
+		 $('<option></option>')
+			.val("0")
+		.html("Please Select"))
+		  var j =0;
+		 $.each(data,function(key,value){
+		  classID[j] = value.grade.class_id;
+		  className[j] = value.grade.class_field;
+		  alert("classID's are -- " + classID);
+		  alert("classNames's are -- " + className);
+		  j++;
+		 });
+		 
+		 for (var j=0;j<className.length;j++){
+         $('<option/>').val(classID[j]).html(className[j]).appendTo('#classList');
+         }
+			var usedNames = {};
+			$("select[id='classList'] > option").each(function () {
+			if(usedNames[this.text]) {
+            $(this).remove();
+			} else {
+            usedNames[this.text] = this.value;
+			}
+         });
+     });
+};
+
+var class_id;
+batchClass = [];
+$('#classList').on('change', function(){
+classVal = $('#classList').val();
+alert("In Class Change -- " + classVal);
+data = {classVal:classVal};
+	 $.ajax({
+         type: "GET",
+         url:"/getBatchClassIdbyClass/",
+		 data: data,
+         dataType: "json",
+	 }).done(function(data) {
+		  var i =0;
+		 batchClass = []; 
+		 $.each(data,function(key,value){
+		  batchClass[i] = value.batch_class_id;
+		  alert("batchClass's in Class Change -- " + batchClass);
+		  i++;
+		 });	 
+		getSectionId(batchClass)
+	 });
+});
+
+
+sections = [];
+sectionName = [];
+function getSectionId(batchClass){
+alert("In getSectionId function");
+var bacthClass_Id = window.batchClass;
+alert(bacthClass_Id);
+data = {'bacthClass_Id[]':bacthClass_Id};
+	 $.ajax({
+         type: "GET",
+         url:"/getSections/",
+		 data: data,
+         dataType: "json",
+	 }).done(function(data) {
+		 $("#selectSection").empty();
+		 $("#selectSection").append(
+		 $('<option></option>')
+			.val("0")
+		.html("Please Select"))
+		  var i =0;
+		 sections = []; 
+		 sectionName = [];
+		 $.each(data,function(key,value){
+		  sections[i] = value.class_sec.sectionId;
+		  sectionName[i] = value.class_sec.section;
+		  alert("Sections are -- " + sections);
+		  i++;
+		 });	 
+
+		 for (var j=0;j<sectionName.length;j++){
+         $('<option/>').val(sections[j]).html(sectionName[j]).appendTo('#selectSection');
+         }
+			var usedNames = {};
+			$("select[id='selectSection'] > option").each(function () {
+			if(usedNames[this.text]) {
+            $(this).remove();
+			} else {
+            usedNames[this.text] = this.value;
+			}
+         }); 
+	 });
+};
+
+batchClassSections_ID = [];
+$('#selectSection').on('change', function(){
+sectionVal = $('#selectSection').val();
+alert( "Subject Chnage " + sectionVal);
+batchClassVal = window.batchClass;
+alert( "Subject Chnage " +  batchClassVal);
+url = '/getBatchClassSectionIds/'
+data = {sectionVal:sectionVal,'batchClassVal[]':batchClassVal};
+	 $.ajax({
+         type: "GET",
+         url:url,
+		 data: data,
+         dataType: "json",
+	 }).done(function(data) {
+		 var i =0;
+		 batchClassSections_ID = [];
+		 $.each(data,function(key,value){
+		  batchClassSections_ID[i] = value.batch_class_section_id;
+		  alert("batchClassSections_ID are -- " + batchClassSections_ID);
+		  i++;
+		 });	
+		getStudentId(batchClassSections_ID)
+	 
+	 });
+});
+ studentId = []; 
+function getStudentId(batchClassSections_ID){
+alert("In Student Function");
+var batchClassSectionId = window.batchClassSections_ID;
+alert(batchClassSectionId);
+url = '/getStudentId/';
+data = {'batchClassSectionId[]':batchClassSectionId};
+	 $.ajax({
+         type: "GET",
+         url:url,
+		 data: data,
+         dataType: "json",
+	 }).done(function(data) {
+	     var i =0;
+		 studentId = []; 
+		 $.each(data,function(key,value){
+		  studentId[i] = value.student_id;
+		  alert("Students are -- " + studentId);
+		  i++;
+		 });
+	 });
+};
+
+$("#getReport").on("click", function() {
+alert("In Save Function");
+var StudentID = window.studentId;
+alert("sample -- " + StudentID);
+var datefield = $('#date').val();
+alert(datefield);
+var data={'StudentID[]':StudentID,datefield:datefield}
+var url='/getAttendanceInformation/';
+getAttendenceResultList(url,data)
+
+});
+
+
+
+
+
+</script>
+<!-- Main content -->
+<section class="content">
+	<div class="row">
+		<div class="col-xs-12">
+			<div class="box">
+				<div class="box-header">
+					<h3 class="box-title">View Attendance </h3>
+				
+				<div class="col-sm-12" style="margin-top:20px;">
+						<div class="col-sm-3">
+							<label>Select Class</label> <select class="form-control"
+								id="classList">
+
+							</select>
+						</div>
+						<div class="col-sm-3">
+							<label>Select Section</label> <select class="form-control"
+								id="selectSection">
+
+							</select>
+						</div>
+					<div class="col-sm-3">
+						<label>Date</label>
+						<input type="date" class="form-control" placeholder="Enter Date"
+						name="date" id="date">
+						</div>
+						
+					<div class="col-sm-2 form-group">
+						  <button type="button" class="btn btn-primary btn-md form-control col-sm-3" id="getReport" style="margin-top: 23px;" name="getReport"> Get Report </button> 
+					</div>
+						
+					</div>
+				</div>
+				<div class="box-body" id="AResult" style="display:none;" >
+					{% render_table classAttndInfo %}
+				</div>
+				<!-- /.box-body -->
+			</div>
+			<!-- /.box -->
+		</div>
+		<!-- /.col -->
+	</div>
+	<!-- /.row -->
+</section>
+<!-- /.content -->

@@ -1,0 +1,292 @@
+{% load table_tags %}
+{% load staticfiles %}
+<link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+<script src="{% static 'js/jquery-2.1.4.min.js' %}"></script>
+<script src="{% static 'js/bootstrap.min.js' %}"></script>
+<script>
+$('#deleteModal').on('hidden.bs.modal', function () {
+	   tab_handler('ClassSubject');
+	});
+$('#addModal').on('hidden.bs.modal', function () {
+	   tab_handler('ClassSubject');
+	});
+	
+$("#addDiv").on("click", function(){
+	 $("#method").val('add');
+	 method = 'add';
+	});
+	
+$('#addModal').on('shown.bs.modal', function () {
+	 $.ajax({
+         type: "GET",
+         url:"/getClass/",
+         dataType: "json",
+	 }).done(function(data) {	
+		$("#selectClass").empty();
+		$("#selectClass").append(
+		 $('<option></option>')
+				.val("0")
+				.html("Please Select")); 	 
+       	$.each(data,function(key,value){
+          		class_field = value.fields.class_field;
+          		class_id = value.pk;
+          		
+          		$("#selectClass").append(
+                        $('<option></option>')
+                               .val(class_id)
+                               .html(class_field));
+          	});
+		
+      });
+	 
+	  	if(method=="edit" || method=="view"){
+	 		alert("In if view");
+			alert(ID);
+			var url = '/viewClass/'+'?ID='+ID;
+		 	$
+			.ajax({
+				url : url,
+				type : "GET",
+				dataType : 'json',})
+			.done(function(data) { 
+			$.each(data,function(key,value){ 
+			selectedClass=value.grade.class_id;
+			alert(selectedClass);
+				$("#selectClass").append(
+				$('<option></option>')
+				.val(value.grade.class_id)
+				.html(value.grade.class_field));
+			selectedSub = value.subject.subject_id;
+			alert(selectedSub)
+				$("#selectSubject").append(
+				$('<option></option>')
+				.val(value.subject.subject_id)
+				.html(value.subject.subject));
+			});
+			$("#selectClass").val(selectedClass);
+			$("#selectSubject").val(selectedSub);
+		});
+	}
+});
+
+$('#addModal').on('shown.bs.modal', function () {
+	 $.ajax({
+         type: "GET",
+         url:"/getSubject/",
+         dataType: "json",
+	 }).done(function(data) {	 
+ 		$("#selectSubject").empty();
+		$("#selectSubject").append(
+		 $('<option></option>')
+				.val("0")
+				.html("Please Select"));       
+       	$.each(data,function(key,value){
+          		subject = value.fields.subject;
+          		subject_id = value.pk;
+          		
+          		$("#selectSubject").append(
+                        $('<option></option>')
+                               .val(subject_id)
+                               .html(subject));
+          	});
+		
+      });
+
+});
+
+var ID;
+$(".fa-file-text").on("click", function() {
+	alert("In View Function");
+	ID = $(this).closest('tr').find('td:eq(0)').html();
+	alert(ID);
+	$("#method").val('view');
+	method = 'view';
+	$('#addModal').modal('show'); 
+	$('#selectClass').prop("disabled", true);
+	$('#selectSubject').prop("disabled", true);
+	$('#saveclassSub').hide();
+	$("#myModalLabel").html('Class Subject Details');
+	});
+
+$(".fa-edit").on("click", function(){
+alert("InEDIT");
+	ID = $(this).closest('tr').find('td:eq(0)').html();
+	class_name = $(this).closest('tr').find('td:eq(1)').html();
+	alert(class_name);
+	subject_name = $(this).closest('tr').find('td:eq(2)').html();
+	alert(subject_name);
+	$("#method").val('edit');
+	method = 'edit';
+	
+	$("#myModalLabel").html('Edit School');
+	$("#saveclassSub").html('Edit');
+	$('#addModal').modal('show');
+	
+	var url = '/viewClassSubject/'+'?ID='+ID;
+	alert(url);
+ 	$
+	.ajax({
+		url : url,
+		type : "GET",
+		dataType : 'json',}) 
+		.done(function(data) {
+			
+				$.each(data,function(key,value){
+	          		alert(value.fields.grade)
+					alert(value.fields.subject)
+	          		$('#selectClass').val(value.fields.grade);
+	          		$('#selectSubject').val(value.fields.subject); 
+	          		
+	          	});
+			 
+	});
+});
+
+$("#saveclassSub").on("click", function() {
+var method = $("#method").val();
+var class_name = $("#selectClass").val();
+var subject_name = $("#selectSubject").val();
+if(method=='add'){
+	alert("inside"+ method+class_name+subject_name)
+	var data = {class_name:class_name,subject_name:subject_name,method};
+	
+}
+else if(method=='edit'){
+	var data = {class_subject_id:ID,class_name:class_name,subject_name:subject_name,method};
+}
+var url = '/addClassSub/';
+	$
+	.ajax({
+		url : url,
+		type : "POST",
+		dataType: "json",
+		data : data,
+		success : function(result) {
+			alert('hi i am '+result);
+		},
+		error : function(result) {
+			alert('hi i am giving weero'+result);
+		}
+	});
+});
+
+$(".fa-trash-o").on("click", function() {
+	ID = $(this).closest('tr').find('td:eq(0)').html();
+	$("#delclassSubject").on("click", function(){
+		var url = '/delClassSubject/'+'?ID='+ID;
+	 	$
+		.ajax({
+			url : url,
+			type : "GET",
+			dataType : {},}) 
+			.done(function(data) {
+				 alert(data);
+		});
+	});
+  });
+
+
+</script>
+<div class="col-md-3 col-sm-6 col-xs-12" style="float: right;"
+	data-toggle="modal" data-target="#addModal" id="addDiv">
+	<div class="info-box">
+		<span class="info-box-icon bg-green"><i
+			class="fa fa-plus-circle"></i></span>
+
+		<div class="info-box-content" id="addSyllabus">
+			<span class="info-box-text" style="margin-left:20px;font-size:20px;">ADD</span>
+		</div>
+		<!-- /.info-box-content -->
+	</div>
+	<!-- /.info-box -->
+</div>
+<!-- Add Batch Modal -->
+<!-- Add School Modal -->
+<div class="modal fade" id="addModal" tabindex="-1" role="dialog"
+	aria-labelledby="myModalLabel">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal"
+					aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+				<h4 class="modal-title" id="myModalLabel">Assign Class Subject</h4>
+			</div>
+			<div class="modal-body">
+				<!-- <form role="form" id="batchForm" method="POST" action="{% url 'batch' %}">
+        {% csrf_token %} -->
+				<!-- text input -->
+			<div class="form-group">	
+				<div class="form-group" >
+                  <label>Select Subject</label>
+                  <select class="form-control" id="selectSubject">
+                    
+                  </select>
+                </div>
+				
+				<div class="form-group" >
+                  <label>Select Class</label>
+                  <select class="form-control" id="selectClass">
+                    
+                  </select>
+                </div>
+				</div>
+				<input type="hidden" id="method" value="add">
+
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-primary" name="save" id="saveclassSub"
+						data-dismiss="modal">Save</button>
+				</div>
+				<!-- </form> -->
+			</div>
+
+		</div>
+	</div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog"
+	aria-labelledby="myModalLabel">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal"
+					aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+				<h4 class="modal-title" id="myModalLabel">Are you sure you want
+					to Delete the Record ?</h4>
+			</div>
+			<div class="modal-body">
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" id="delclassSubject"
+						data-dismiss="modal">Yes</button>
+					<button type="submit" class="btn btn-primary" name="no"
+						data-dismiss="modal">No</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Main content -->
+<section class="content">
+	<div class="row">
+		<div class="col-xs-12">
+			<div class="box">
+				<div class="box-header">
+					<h3 class="box-title">List of Syllabus</h3>
+				</div>
+				<!-- /.box-header -->
+				<div class="box-body">{% render_table classSubjectList %}</div>
+				<!-- /.box-body -->
+			</div>
+			<!-- /.box -->
+		</div>
+		<!-- /.col -->
+	</div>
+	<!-- /.row -->
+</section>
+<!-- /.content -->

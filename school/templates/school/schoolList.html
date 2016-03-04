@@ -1,0 +1,281 @@
+{% load table_tags %}
+
+<script>
+$('#deleteModal').on('hidden.bs.modal', function () {
+	   tab_handler('School');
+	});
+$('#addSchoolModal').on('hidden.bs.modal', function () {
+	   tab_handler('School');
+});
+$('#addSchoolModal').on('shown.bs.modal', function () {
+	 $.ajax({
+         type: "GET",
+         url:"/getPrincipal/",
+         dataType: "json",
+	 }).done(function(data) {	 
+		 $("#selectPrincipal").empty(); 
+       	$.each(data,function(key,value){
+          		principal = value.fields.principal_name;
+          		principal_id = value.pk;
+          		
+          		$("#selectPrincipal").append(
+                        $('<option></option>')
+                               .val(principal_id)
+                               .html(principal));
+                  
+          	});
+      });
+
+});
+
+var schoolCode;
+
+$(".fa-edit").on("click", function() {
+	schoolCode = $(this).closest('tr').find('td:eq(0)').html();
+	schoolName = $(this).closest('tr').find('td:eq(1)').html();
+	schoolBranch = $(this).closest('tr').find('td:eq(2)').html();
+	censusCode = $(this).closest('tr').find('td:eq(3)').html();
+	telNo = $(this).closest('tr').find('td:eq(4)').html();
+	emailAddress = $(this).closest('tr').find('td:eq(5)').html();
+	websiteUrl = $(this).closest('tr').find('td:eq(6)').html();
+	$("#method").val('edit');
+	method = 'edit';
+	
+	$("#myModalLabel").html('Edit School');
+	$("#saveSchool").html('Edit');
+	$("#schoolName").val(schoolName);
+	$("#schoolBranch").val(schoolBranch);
+	$("#censusCode").val(censusCode);
+	$("#telNo").val(telNo);
+	$("#emailAddress").val(emailAddress);
+	$("#websiteUrl").val(websiteUrl);
+	$('#addSchoolModal').modal('show');
+	
+	var url = '/viewSchool/'+'?schoolCode='+schoolCode;
+ 	$
+	.ajax({
+		url : url,
+		type : "GET",
+		dataType : 'json',}) 
+		.done(function(data) {
+			
+				$.each(data,function(key,value){
+	          		alert(value.fields.principal)
+	          		$('#selectPrincipal').val(value.fields.principal);
+	          		$('#address').val(value.fields.address); 
+	          		$('#faxNo').val(value.fields.fax_no);
+	          	}); 
+	          	
+	});
+	
+  });
+
+$("#saveSchool").on("click", function() {
+	
+	var method = $("#method").val();
+	schoolName = $("#schoolName").val();
+	schoolBranch = $("#schoolBranch").val();
+	principal = $("#selectPrincipal").val();
+	censusCode = $("#censusCode").val();
+	address = $("#address").val();
+	faxNo = $("#faxNo").val();
+	telNo = $("#telNo").val();
+	emailAddress = $("#emailAddress").val();
+	websiteUrl = $("#websiteUrl").val();
+	
+	if(method=='add'){
+		
+		var data = {schoolName:schoolName,schoolBranch:schoolBranch,principal:principal, censusCode:censusCode,address:address,
+				faxNo:faxNo, telNo:telNo, emailAddress:emailAddress, websiteUrl:websiteUrl, method};
+	}else if(method == 'edit'){
+		
+		var data = {school_code:schoolCode,schoolName:schoolName,schoolBranch:schoolBranch,principal:principal, censusCode:censusCode,address:address,
+				faxNo:faxNo, telNo:telNo, emailAddress:emailAddress, websiteUrl:websiteUrl, method};
+	} 
+	var url = '/addSchool/';
+	$
+	.ajax({
+		url : url,
+		type : "POST",
+		dataType: "json",
+		data : data,
+		success : function(result) {
+			alert('hi i am '+result);
+		},
+		error : function(result) {
+			alert('hi i am giving weero'+result);
+		}
+	});
+  });
+  
+$(".fa-file-text").on("click", function() {
+	$('#addSchoolModal').modal('show'); 
+	schoolCode = $(this).closest('tr').find('td:eq(0)').html();
+	var url = '/viewSchool/'+'?schoolCode='+schoolCode;
+ 	$
+	.ajax({
+		url : url,
+		type : "GET",
+		dataType : 'json',}) 
+		.done(function(data) {
+			
+				$.each(data,function(key,value){
+	          		alert(value.fields.principal)
+	          		$('#selectPrincipal').val(value.fields.principal);
+	          		//$('#selectPrincipal').prop("disabled", true);
+	          		
+	          		$('#address').val(value.fields.address);
+	          		$('#address').prop("disabled", true);
+	          		 
+	          		$('#faxNo').val(value.fields.fax_no);
+	          		$('#faxNo').prop("disabled", true);  
+	          	});
+			 
+	});
+	
+ 	 $('#schoolName').val($(this).closest("tr").find('td:eq(1)').html());
+	 $('#schoolName').prop("disabled", true);
+	 $('#schoolBranch').val($(this).closest("tr").find('td:eq(2)').html());
+	 $('#schoolBranch').prop("disabled", true);
+	 $('#censusCode').val($(this).closest("tr").find('td:eq(3)').html());
+	 $('#censusCode').prop("disabled", true);
+	 $('#telNo').val($(this).closest("tr").find('td:eq(4)').html());
+	 $('#telNo').prop("disabled", true);
+	 $('#emailAddress').val($(this).closest("tr").find('td:eq(5)').html());
+	 $('#emailAddress').prop("disabled", true);
+	 $('#websiteUrl').val($(this).closest("tr").find('td:eq(5)').html());
+	 $('#websiteUrl').prop("disabled", true);
+	 
+	 $('#saveSchool').hide();
+	 //$('#addSchoolModal').modal('show'); 
+	 $("#myModalLabel").html('School Details');
+});
+
+$(".fa-trash-o").on("click", function() {
+	schoolCode = $(this).closest('tr').find('td:eq(0)').html();
+	$("#delSchool").on("click", function(){
+		var url = '/delSchool/'+'?schoolCode='+schoolCode;
+	 	$
+		.ajax({
+			url : url,
+			type : "GET",
+			dataType : {},}) 
+			.done(function(data) {
+				 alert(data);
+		});
+	});
+  });
+
+</script>
+<div class="col-md-3 col-sm-6 col-xs-12" style="float: right;"
+	data-toggle="modal" data-target="#addSchoolModal">
+	<div class="info-box">
+		<span class="info-box-icon bg-green"><i
+			class="fa fa-plus-circle"></i></span>
+
+		<div class="info-box-content" id="addSchool">
+			<span class="info-box-text">Add School</span>
+		</div>
+		<!-- /.info-box-content -->
+	</div>
+	<!-- /.info-box -->
+</div>
+<!-- Add School Modal -->
+<div class="modal fade" id="addSchoolModal" tabindex="-1" role="dialog"
+	aria-labelledby="myModalLabel">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal"
+					aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+				<h4 class="modal-title" id="myModalLabel">Add New School</h4>
+			</div>
+			<div class="modal-body">
+				<!-- <form role="form" id="batchForm" method="POST" action="{% url 'batch' %}">
+        {% csrf_token %} -->
+				<!-- text input -->
+				<div class="form-group">
+					<label>School Name</label> <input type="text" class="form-control"
+						placeholder="Enter School" name="schoolName" id="schoolName">
+					<label>Branch</label> <input type="text" class="form-control"
+						placeholder="Enter Branch" name="schoolBranch" id="schoolBranch">
+						
+				<div class="form-group" >
+                  <label>Select Principal</label>
+                  <select class="form-control" id="selectPrincipal">
+                    
+                  </select>
+                </div>
+					
+					<label>Census Code</label> <input type="text" class="form-control"
+						placeholder="Enter Census Code" name="censusCode" id="censusCode">
+					<label>Address</label> <input type="text" class="form-control"
+						placeholder="Enter Address" name="address" id="address">
+					<label>Fax No</label> <input type="number" class="form-control"
+						placeholder="Enter Fax No" name="faxNo" id="faxNo">
+					<label>Telephone Number</label> <input type="tel" class="form-control"
+						placeholder="Enter Telephone No" name="telNo" id="telNo">
+					<label>Email Address</label> <input type="email" class="form-control"
+						placeholder="Enter Address" name="emailAddress" id="emailAddress">
+					<label>Website URL</label> <input type="url" class="form-control"
+						placeholder="Enter Website" name="websiteUrl" id="websiteUrl">
+					<input type="hidden" id="method" value="add">
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-primary" name="save" id="saveSchool"
+						data-dismiss="modal">Save</button>
+				</div>
+				<!-- </form> -->
+			</div>
+
+		</div>
+	</div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog"
+	aria-labelledby="myModalLabel">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal"
+					aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+				<h4 class="modal-title" id="myModalLabel">Are you sure you want
+					to Delete the Record ?</h4>
+			</div>
+			<div class="modal-body">
+				<div class="modal-footer">
+					<button type="submit" class="btn btn-default" id="delSchool"
+						data-dismiss="modal">Yes</button>
+					<button type="button" class="btn btn-primary" name="no"
+						data-dismiss="modal">No</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Main content -->
+<section class="content">
+	<div class="row">
+		<div class="col-xs-12">
+			<div class="box">
+				<div class="box-header">
+					<h3 class="box-title">List of Schools</h3>
+				</div>
+				<!-- /.box-header -->
+				<div class="box-body">{% render_table schoolList %}</div>
+				<!-- /.box-body -->
+			</div>
+			<!-- /.box -->
+		</div>
+		<!-- /.col -->
+	</div>
+	<!-- /.row -->
+</section>
+<!-- /.content -->

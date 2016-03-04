@@ -1,0 +1,677 @@
+{% load table_tags %} {% load staticfiles %}
+<link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+<link href="{% static 'css/timetable.css' %}" rel="stylesheet">
+<script src="{% static 'js/jquery-2.1.4.min.js' %}"></script>
+<script src="{% static 'js/bootstrap.min.js' %}"></script>
+
+<script>
+	$('#deleteModal').on('hidden.bs.modal', function() {
+		tab_handler('Teacher Timetable');
+	})
+	$('#teacherTimetableModal').on('hidden.bs.modal', function() {
+		tab_handler('Teacher Timetable');
+	})
+	var teacherTimetableCode;
+	
+	$( document ).ready(function() {
+		$.ajax({
+			type : "GET",
+			url : "/getTeacher/",
+			data : {
+				
+			},
+			dataType : "json",
+		}).done(
+				function(data) {
+					$("#teacherList").append(
+	                        $('<option></option>')
+	                               .val(0)
+	                               .html("Please Select"));
+					$.each(data,function(key,value){
+						
+						teacher_first_name = value.fields.teacher_first_name;
+						teacher_last_name =  value.fields.teacher_last_name;
+						teacher_name = teacher_first_name + ' ' + teacher_last_name;
+		          		teacher_id = value.pk;
+		          		$("#teacherList").append(
+		                        $('<option></option>')
+		                               .val(teacher_id)
+		                               .html(teacher_name));
+					});
+				});
+	});
+	
+	//code for change in teachers for fetching details 
+	$('#teacherList').on(
+			"change",
+			function() {
+				if ($("#teacherList").val() != "0")
+				$('#viewModal').modal('show'); 
+				else{
+					$('#viewModal').modal('hide'); 
+				}
+			});
+	
+	$('#viewModal')
+	.on(
+			'shown.bs.modal',
+			function() {
+				var teacher_id = $("#teacherList option:selected").val();
+				$("#finish_table tbody").empty();
+				$.ajax({
+					type : "GET",
+					url : "/getTeacherDetails/",
+					data : {
+						"teacher_id" : teacher_id
+					},
+					dataType : "json",
+				}).done(
+						function(data) {
+							var day=["-1","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+							var period =["-1","1","2","3","4","5","6","7","8"];
+							var tbodyInTable = "<tr><td class='weekdayTd'><b>Monday</b></td></tr><tr><td class='weekdayTd'><b>Tuesday</b></td></tr><tr><td class='weekdayTd'><b>Wednesday</b></td></tr><tr><td class='weekdayTd'><b>Thursday</b></td></tr><tr><td class='weekdayTd'><b>Friday</b></td></tr><tr><td class='weekdayTd'><b>Saturday</b></td></tr>";
+							$("#finish_table tbody").append(tbodyInTable);
+							var table = document.getElementById("finish_table");
+					
+							for(l=1;l<day.length;l++){
+								r = document.getElementsByTagName("tr")[l];
+								for(m=1;m<period.length;m++){
+									var c = r.insertCell(m);
+								}
+							}
+							
+							$.each(data,function(key,value){
+								for (i=0;i<day.length;i++){
+									
+									if(value.day==day[i]){
+										
+										for(j=0;j<period.length;j++){
+											
+											if(value.period.period_id==period[j]){
+												
+												
+												newData= "<td>"+"Class : " + value.grade.class_field + "-" + value.section.section + "<br>" +"Subject : " +value.subject.subject +"<br>" + "Time : " + value.period.from_time + "-" + value.period.to_time+"</td>";
+												
+												table.rows[i].cells[j].innerHTML = newData;
+											}
+										}
+									}
+									
+								}	 
+							 });	
+						});
+			});
+	
+	
+	/* code for opening add dialog */
+	$('#teacherTimetableModal')
+			.on(
+					'shown.bs.modal',
+					function() {
+						$("#selectBatch").empty();
+						$("#selectClass").empty();
+						$("#selectSubject").empty();
+						$("#selectSection").empty();
+						$("#selectTeacher").empty();
+						$("#selectPeriod").empty();
+						$("#date").empty();
+						//$("#selectDay").empty();
+						$
+								.ajax({
+									type : "GET",
+									url : "/getClassDetails/",
+									dataType : "json",
+								})
+								.done(
+										function(data) {
+											/* $("#selectClass").append(
+													$('<option></option>').val(
+															0).html(
+															"Please Select"));
+											var classList = data.classList;
+											for (i = 0; i < classList.length; i++) {
+												var _class = classList[i];
+												$("#selectClass")
+														.append(
+																$(
+																		'<option></option>')
+																		.val(
+																				_class.pk)
+																		.html(
+																				_class.fields.class_field));
+											} */
+											$("#selectBatch").append(
+													$('<option></option>').val(
+															0).html(
+															"Please Select"));
+											var batchList = data.batchList;
+											for (i = 0; i < batchList.length; i++) {
+												var _batch = batchList[i];
+												$("#selectBatch")
+														.append(
+																$(
+																		'<option></option>')
+																		.val(
+																				_batch.pk)
+																		.html(
+																				_batch.fields.batch));
+											}
+											$("#selectPeriod").append(
+													$('<option></option>').val(
+															0).html(
+															"Please Select"));
+											var periodList = data.periodList;
+											for (i = 0; i < periodList.length; i++) {
+												var _period = periodList[i];
+												$("#selectPeriod")
+														.append(
+																$(
+																		'<option></option>')
+																		.val(
+																				_period.pk)
+																		.html(
+																				_period.fields.period));
+											}
+										});
+						
+						
+						/* if (method == "view" || method == "edit") {
+							 var url = '/viewTeacherTimetable/'+'?teacherTimetableCode='+teacherTimetableCode;
+							 //ajax call for fetching batch
+							 $
+							 .ajax({
+							 url : url,
+							 type : "GET",
+							 dataType : 'json',}) 
+							 .done(function(data) {
+							 $.each(data,function(key,value){
+								 //setting batch
+								 batch_id = value.batches.batch_id;
+								 $("#selectBatch").val(batch_id); 
+								 $.ajax({
+										type : "GET",
+										url : "/getBatchClass/",
+										data : {
+											"batch_id" : batch_id
+										},
+										dataType : "json",
+									}).done(
+											function(data) {
+												$("#selectClass").append(
+														$('<option></option>').val(0).html(
+																"Please Select"));
+												var classList = data.classList1;
+												for (i = 0; i < classList.length; i++) {
+													var _class = classList[i];
+													$("#selectClass").append(
+															$('<option></option>').val(_class.pk)
+																	.html(_class.fields.class_field));
+												}
+												//setting class
+												class_id = value.grades.class_id;
+												$("#selectClass").val(value.grades.class_id); 
+												//ajax call for fetching sections and subject
+												$.ajax({
+													type : "GET",
+													url : "/getClassSubject/",
+													data : {
+														"class_id" : class_id
+													},
+													dataType : "json",
+												}).done(
+														function(data) {
+															$("#selectSubject").append(
+																	$('<option></option>').val(0).html(
+																			"Please Select"));
+															var subjectList = data.subjectList1;
+															for (i = 0; i < subjectList.length; i++) {
+																var _subject = subjectList[i];
+																$("#selectSubject").append(
+																		$('<option></option>').val(_subject.pk)
+																				.html(_subject.fields.subject));
+															}
+														
+												$("#selectSection").append(
+														$('<option></option>').val(
+																0).html(
+																"Please Select"));
+												var sectionList = data.sectionList1;
+												for (i = 0; i < sectionList.length; i++) {
+													var _section = sectionList[i];
+													$("#selectSection")
+															.append(
+																	$(
+																			'<option></option>')
+																			.val(
+																					_section.pk)
+																			.html(
+																					_section.fields.section));
+												}
+												//settign subjects and sections
+												subject_id = value.subjects.subject_id;
+												section_id = value.sections.sectionId;
+												$("#selectSubject").val(value.subjects.subject_id);
+												$("#selectSection").val(value.sections.sectionId);
+												//ajax call for fetching teachers 
+												$.ajax({
+													type : "GET",
+													url : "/getBatchClassTeacher/",
+													data : {
+														"batch" : batch_id,
+														"class_name" : class_id,
+														"section" : section_id,
+														"subject" : subject_id
+													},
+													dataType : "json",
+												}).done(
+														function(data) {
+															$("#selectTeacher").append(
+																	$('<option></option>').val(0).html(
+																			"Please Select"));
+															var classList = data.classList1;
+															for (i = 0; i < classList.length; i++) {
+																var _class = classList[i];
+																$("#selectTeacher").append(
+																		$('<option></option>').val(_class.pk)
+																				.html(_class.fields.teacher_first_name));
+															}
+													$("#selectTeacher").val(value.teachers.teacher_id);
+														});
+											});
+												//from_time = $("#fromTime").val(value.from_time);
+												 //to_time = $("#toTime").val(value.to_time);
+												 day = $("#selectDay").val(value.day);
+											});
+							 });
+							
+							 });
+						} */
+					});
+	
+	//code for change in batch to fetch class
+	$('#selectBatch').on(
+			"change",
+			function() {
+				$("#selectClass").empty();
+				var batch_id = $(this).val();
+				$.ajax({
+					type : "GET",
+					url : "/getBatchClass/",
+					data : {
+						"batch_id" : batch_id
+					},
+					dataType : "json",
+				}).done(
+						function(data) {
+							$("#selectClass").append(
+									$('<option></option>').val(0).html(
+											"Please Select"));
+							var classList = data.classList1;
+							for (i = 0; i < classList.length; i++) {
+								var _class = classList[i];
+								$("#selectClass").append(
+										$('<option></option>').val(_class.pk)
+												.html(_class.fields.class_field));
+							}
+						});
+			});
+	
+	//code for change in section to fetch teacher
+	$('#selectSubject').on(
+			"change",
+			function() {
+				$("#selectTeacher").empty();
+				 batch = $("#selectBatch option:selected").val();
+				 class_name = $("#selectClass option:selected").val();
+				 subject = $("#selectSubject option:selected").val();
+				 section = $("#selectSection option:selected").val();
+				$.ajax({
+					type : "GET",
+					url : "/getBatchClassTeacher/",
+					data : {
+						"batch" : batch,
+						"class_name" : class_name,
+						"section" : section,
+						"subject" : subject
+					},
+					dataType : "json",
+				}).done(
+						function(data) {
+							$("#selectTeacher").append(
+									$('<option></option>').val(0).html(
+											"Please Select"));
+							var classList = data.classList1;
+							for (i = 0; i < classList.length; i++) {
+								var _class = classList[i];
+								$("#selectTeacher").append(
+										$('<option></option>').val(_class.pk)
+												.html(_class.fields.teacher_first_name));
+							}
+							var usedNames = {};
+						    $("select[id='selectTeacher'] > option").each(function () {
+						       if(usedNames[this.text]) {
+						           $(this).remove();
+						       } else {
+						           usedNames[this.text] = this.value;
+						       }
+						   });
+						});
+			});
+	
+	/* code for on change of class to fetch section and subject */
+	$('#selectClass').on(
+			"change",
+			function() {
+				$("#selectSubject").empty();
+				$("#selectSection").empty();
+				var class_id = $(this).val();
+				var batch_id = $("#selectBatch option:selected").val();
+				$.ajax({
+					type : "GET",
+					url : "/getClassSubject/",
+					data : {
+						"class_id" : class_id,
+						"batch_id" : batch_id
+					},
+					dataType : "json",
+				}).done(
+						function(data) {
+							$("#selectSubject").append(
+									$('<option></option>').val(0).html(
+											"Please Select"));
+							var subjectList = data.subjectList1;
+							for (i = 0; i < subjectList.length; i++) {
+								var _subject = subjectList[i];
+								$("#selectSubject").append(
+										$('<option></option>').val(_subject.pk)
+												.html(_subject.fields.subject));
+							}
+						
+				$("#selectSection").append(
+						$('<option></option>').val(
+								0).html(
+								"Please Select"));
+				var sectionList = data.sectionList2;
+				for (i = 0; i < sectionList.length; i++) {
+					var _section = sectionList[i];
+					$("#selectSection")
+							.append(
+									$(
+											'<option></option>')
+											.val(
+													_section.pk)
+											.html(
+													_section.fields.section));
+				}
+			});
+			});
+	 
+	
+	
+	
+/* code for edit */
+/* 	$(".fa-edit").on("click", function() {
+		teacherTimetableCode = $(this).closest('tr').find('td:eq(0)').html();
+		$("#method").val('edit');
+		method = 'edit';
+		
+		$("#myModalLabel").html('Edit Teacher Timetable');
+		$(".saveTeacherTimetable").html('Edit');
+		$("#teacherTimetableId").val(teacherTimetableCode);
+		
+		$('#teacherTimetableModal').modal('show');  
+	  }); */
+	  
+/* code for add */
+	 $(".saveTeacherTimetable").on("click", function() {
+		 
+	 var method = $("#method").val();
+	 teacher_timetable_id = $("#teacherTimetableId").val();
+	 batch = $("#selectBatch option:selected").val();
+	 class_name = $("#selectClass option:selected").val();
+	 subject = $("#selectSubject option:selected").val();
+	 section = $("#selectSection option:selected").val();
+	 teacher = $("#selectTeacher option:selected").val(); 
+	 period = $("#selectPeriod option:selected").val(); 
+	 day = $("#selectDay option:selected").val();
+	 if(method=='add'){
+	 var data = {batch:batch,class_name:class_name,subject:subject,section:section,teacher:teacher,period:period,day:day, method};
+	 }
+	 var url = '/teacherTimetable/';
+	 $
+	 .ajax({
+	 	url : url,
+	 	type : "POST",
+	 	dataType: "json",
+	 	data : data,
+	 	success : function(result) {
+	 	},
+	 	error : function(result) {
+	 	}
+	 });
+	 }); 
+	  
+/* code for view  */
+ /* 	 $(".fa-file-text").on("click", function() {
+		 alert("in view");
+
+	 $('#viewModal').modal('show');   
+	
+	 $("#myModalLabel").html('Teacher Timetable Details');
+	 }); */
+	 
+/* for delete code */ 
+	/*   $(".fa-trash-o").on("click", function() {
+	 teacherTimetableCode = $(this).closest('tr').find('td:eq(0)').html();
+	 $("#delTeacherTimetable").on("click", function(){
+	 var url = '/delTeacherTimetable/'+'?teacherTimetableCode='+teacherTimetableCode;
+	 $
+	 .ajax({
+	 url : url,
+	 type : "GET",
+	 dataType : {},}) 
+	 .done(function(data) {
+	 });
+	 });
+	 });  */
+	 $("#addDiv").on("click", function(){
+			$("#method").val('add');
+			method = 'add';
+		});
+</script>
+<div class="col-md-3 col-sm-6 col-xs-12" style="float: right;"
+	data-toggle="modal" data-target="#teacherTimetableModal" id="addDiv">
+	<div class="info-box">
+		<span class="info-box-icon bg-green"><i
+			class="fa fa-plus-circle"></i></span>
+
+		<div class="info-box-content" id="addTeacherTimetable">
+			<span class="info-box-text" style="margin-left:20px;font-size:20px;">Add</span>
+		</div>
+
+	</div>
+
+</div>
+<!-- Add Class Time Table -->
+<div class="modal fade" id="teacherTimetableModal" tabindex="-1"
+	role="dialog" aria-labelledby="myModalLabel">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal"
+					aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+				<h4 class="modal-title" id="myModalLabel">Add Teacher Timetable</h4>
+			</div>
+			<div class="modal-body">
+				<input type="hidden" id="teacherTimetableId" value=""> <input
+					type="hidden" id="method" value="add">
+				<div class="form-group">
+					<label>Select Batch</label> <select class="form-control"
+						id="selectBatch">
+
+					</select>
+				</div>
+				<div class="form-group">
+					<label>Select Class</label> <select class="form-control"
+						id="selectClass">
+
+					</select>
+				</div>
+				<div class="form-group">
+					<label>Select Section</label> <select class="form-control"
+						id="selectSection">
+
+					</select>
+				</div>
+				<div class="form-group">
+					<label>Select Subject</label> <select class="form-control"
+						id="selectSubject">
+
+					</select>
+				</div>
+				<div class="form-group">
+					<label>Select Teacher</label> <select class="form-control"
+						id="selectTeacher">
+
+					</select>
+				</div>
+				<div class="form-group">
+					<label>Select Period</label> <select class="form-control"
+						id="selectPeriod">
+
+					</select>
+				</div>
+				<div class="form-group">
+					<label>Select Day</label> <select class="form-control"
+						id="selectDay">
+						<option value="0">Please Select</option>
+						<option value="Monday">Monday</option>
+						<option value="Tuesday">Tuesday</option>
+						<option value="Wednesday">Wednesday</option>
+						<option value="Thursday">Thursday</option>
+						<option value="Friday">Friday</option>
+						<option value="Saturday">Saturday</option>
+					</select>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-primary saveTeacherTimetable"
+						name="save" data-dismiss="modal">Save</button>
+				</div>
+			</div>
+
+		</div>
+	</div>
+</div>
+
+<!-- Delete Modal -->
+<!-- <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog"
+	aria-labelledby="myModalLabel">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal"
+					aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+				<h4 class="modal-title" id="myModalLabel">Are you sure you want
+					to Delete the Record ?</h4>
+			</div>
+			<div class="modal-body">
+				<div class="modal-footer">
+					<button type="submit" class="btn btn-default"
+						id="delTeacherTimetable" data-dismiss="modal">Yes</button>
+					<button type="button" class="btn btn-primary" name="no"
+						data-dismiss="modal">No</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div> -->
+<!-- view Modal -->
+<div class="modal fade" id="viewModal" tabindex="-1" role="dialog"
+	aria-labelledby="myModalLabel">
+	<div class="modal-dialog modal-dialogTimetable" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal"
+					aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				<table class="table table-responsive table-striped table-bordered"
+					id="finish_table" border="1">
+					<thead>
+						<tr style="text-align: center;">
+							<th><b>WeekDays</b></th>
+							<th id="1">Period 1</th>
+							<th id="2">Period 2</th>
+							<th id="3">Period 3</th>
+							<th id="4">Period 4</th>
+							<th id="5">Period 5</th>
+							<th id="6">Period 6</th>
+							<th id="7">Period 7</th>
+							<th id="8">Period 8</th>
+						</tr>
+					</thead>
+					<tbody id="tbody">
+						<!-- <tr class="weekday" id="1">
+							<td class="weekdayTd"><b>Monday</b></td>
+						</tr>
+						<tr class="weekday" id="2">
+							<td class="weekdayTd"><b>Tuesday</b></td>
+						</tr>
+						<tr class="weekday" id="3">
+							<td class="weekdayTd"><b>Wednesday</b></td>
+						</tr>
+						<tr class="weekday" id="4">
+							<td class="weekdayTd"><b>Thursday</b></td>
+						</tr>
+						<tr class="weekday" id="5">
+							<td class="weekdayTd"><b>Friday</b></td>
+						</tr>
+						<tr class="weekday" id="6">
+							<td class="weekdayTd"><b>Saturday</b></td>
+						</tr> -->
+					</tbody>
+				</table>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-primary" name="no"
+						data-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Main content -->
+<section class="content">
+	<div class="row">
+		<div class="col-xs-12">
+			<div class="box">
+				<div class="box-header">
+					<h3 class="box-title">View Timetable</h3>
+				</div>
+				<!-- /.box-header -->
+				<div class="box-body">
+					<div class="col-sm-12">
+						<div class="col-sm-3">
+							<label>Select Teacher</label> <select class="form-control"
+								id="teacherList">
+
+							</select>
+						</div>
+					</div>
+				</div>
+				<!-- /.box-body -->
+			</div>
+			<!-- /.box -->
+		</div>
+		<!-- /.col -->
+	</div>
+	<!-- /.row -->
+</section>
+<!-- /.content -->

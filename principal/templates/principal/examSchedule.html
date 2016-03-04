@@ -1,0 +1,179 @@
+{% load table_tags %}
+{% load staticfiles %}
+<link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+<script src="{% static 'js/jquery-2.1.4.min.js' %}"></script>
+<script src="{% static 'js/bootstrap.min.js' %}"></script>
+<script src="{% static 'js/commonUtils.js' %}"></script>
+
+
+<style type="text/css">
+
+ .modal.modal-wide .modal-dialog {
+  width: 80%;
+}
+.modal-wide .modal-body {
+  overflow-y: auto;
+}
+#idStudentname{
+background:none;
+border:none;
+}
+</style>
+
+<script>
+$(document).ready(function(){
+	
+	//$('#idExamScheduleTable').prop("hidden", true);
+	$('#idClass').addClass('form-control');	
+	$('invisible').css('display', 'block !important');
+	$('#idClass').prop("disabled", true);
+	
+	$("#idBatch").on("change", function() { 
+		selectedOpt=$(this).find(':selected').val();
+		alert(selectedOpt);
+		getClassesValue(selectedOpt);	
+	} );
+	
+	$("#idClass").on("change", function() { 
+		selectedOpt=$(this).find(':selected').val();
+		alert("batchId :",selectedOpt);
+		//getSectionValue(selectedOpt);
+		$('#bcId').val(selectedOpt);
+	} );
+	
+});
+
+
+
+function searchExamSchedule()
+{
+	if($('#idBatch').val() && $('#idClass').val() && $('#idExamType').val() != null)
+	{
+		var bcId =$("#bcId").val();
+		var examTypeId= $('#idExamType').val();
+		url = '/getExamScheduleDetails/'
+		getExamScheduleDetails(url,bcId,examTypeId)	
+	}else{
+		alert("bacthId  Class ,section or exam type is not field");
+	}
+	
+}
+
+function getExamScheduleDetails(url,bcId,examTypeId)
+{ 	
+	var data={bcId:bcId,examTypeId:examTypeId};
+	$.ajax({
+		url : url,
+		type : "GET",
+		data : data,
+	})
+	.done(function( data ){
+			$('#examScheduleTbody').empty();
+			$('#idclassName').text(data[0].classVal.class_field);
+			//('#idExamName').text(data[0].examType.exam_type_id);
+			
+			//alert($('#idclassName').text(data[0].classVal.class_field));
+			$.each(data, function(key,value){
+				$('#examScheduleTbody').append('<tr><td></td><td>'+value.subjectDetails.subject+'</td><td>'+value.day+'</td><td>'+value.date+'</td><td>'+value.from_time+'</td><td>'+value.to_time+'</td></tr>');
+				
+			});
+		});
+	
+
+}
+
+</script>
+
+<section class="content">
+ 
+ <div class="box">
+    <div class="box-header">
+     <h3 class="box-title"></h3>
+    </div>
+    <!-- /.box-header -->
+    <div class="box-body">
+    	
+    	  <div class="col-sm-12">
+			<div class="row">
+				
+					<div class="col-sm-2 form-group">
+						  <label>Search Result by: </label>	
+					</div>
+					<div class="col-sm-2 form-group">
+						<label>Batch</label>
+						{{bform.batch}}
+					</div>
+					<div class="col-sm-2 form-group col-ms-offset-1">
+						  <label>Class</label>
+						   {{clsform.grade_id}}
+					</div>
+					
+					<input type="hidden" id="bcId" value="">
+					
+					<div class="col-sm-2 form-group col-ms-offset-1">
+						  <label>Exam Type</label>
+							{{examTypeFrm.exam_type}}
+					</div>		
+					<div class="col-sm-2 form-group">
+						  <label  id="invisible"> test</label>
+						  <button type="button" class="btn btn-primary btn-md glyphicon glyphicon-search form-control col-sm-3" id="searchResultBtn" name="search" onclick="searchExamSchedule();">Search </button> 
+					</div>
+					
+			</div>
+ 		</div>
+ 		
+ 	</div>
+ 	<!-- /.box-body -->
+ </div>
+    
+     
+  
+
+
+<!-- Add School Modal -->
+
+
+
+<!-- Main content -->
+<section class="content" id="idExamScheduleTable">
+ <div class="row">
+  <div class="col-xs-12">
+   <div class="box">
+    <div class="box-header">
+     
+     <div class="row">	
+     				<div class="col-sm-2 form-group">
+						  <label>Exam Schedule</label>
+					</div>
+					<div class="col-sm-2 form-group">
+						  <label>Class :</label>
+						  <label id="idclassName"></label> 
+					</div>
+					<div class="col-sm-2 form-group"></div>
+						<label>Exam Type:</label>
+						<label id="idExamName"></label>
+					</div>
+    </div>
+    <!-- /.box-header -->
+	  <table class="table table-striped">
+		    <thead>
+		        <tr>
+		        	<th></th>
+		            <th>Subject</th>
+		            <th>Day</th>
+		            <th>Date</th>
+		            <th>From Time</th>
+		            <th>To Time</th>
+		        </tr>
+		    </thead>
+		    <tbody id="examScheduleTbody">
+		    		
+		    </tbody>
+	   </table>
+   </div>
+   <!-- /.box -->
+  </div>
+  <!-- /.col -->
+ </div>
+ <!-- /.row -->
+</section>

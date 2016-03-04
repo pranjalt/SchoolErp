@@ -1,0 +1,273 @@
+{% load table_tags %}
+{% load staticfiles %}
+<link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+<script src="{% static 'js/jquery-2.1.4.min.js' %}"></script>
+<script src="{% static 'js/bootstrap.min.js' %}"></script>
+<script src="{% static 'js/commonUtils.js' %}"></script>
+
+<script>
+var examTypeId;
+var teacher_id = 25;
+$(document).ready(function(){
+$('#batchList').prop("disabled", true);
+$('#classList').prop("disabled", true);
+$('#selectSubject').prop("disabled", true);
+$('#sectionList').prop("disabled", true);
+alert("In Function");
+	 $.ajax({
+         type: "GET",
+         url:"/getExamTypeList/",
+         dataType: "json",
+	 }).done(function(data) {
+				$("#examTypeList").empty();
+				$("#examTypeList").append(
+				  $('<option></option>')
+				      .val("0")
+				        .html("Please Select")); 	         
+       	$.each(data,function(key,value){
+          		exam_type = value.fields.exam_type;
+          		exam_type_id = value.pk;
+          		
+          		$("#examTypeList").append(
+                        $('<option></option>')
+                               .val(exam_type_id)
+                               .html(exam_type));
+          	});
+		
+      });
+});
+	
+$('#examTypeList').on('change', function(){
+	  $('#batchList').prop("disabled", false);
+	   examTypeId = $('#examTypeList').val();
+	  alert("This is Pk -- " + examTypeId);
+	 $.ajax({
+         type: "GET",
+         url:"/getBatch/",
+         dataType: "json",
+	 }).done(function(data) {
+				$("#batchList").empty();
+				$("#batchList").append(
+				  $('<option></option>')
+				      .val("0")
+				        .html("Please Select")); 	         
+       	$.each(data,function(key,value){
+          		batch = value.fields.batch;
+          		batch_id = value.pk;
+          		
+          		$("#batchList").append(
+                        $('<option></option>')
+                               .val(batch_id)
+                               .html(batch));
+          	});
+		
+      });
+});
+var classid;
+var batch_id ;
+$('#batchList').on('change', function(){
+alert("ïn Batch Change Function");
+$('#classList').prop("disabled", false);
+batch_id= $('#batchList').val();
+alert("This is batch_id -- " + batch_id);
+data = {batch_id:batch_id};
+	 $.ajax({
+         type: "GET",
+         url:"/getClassbyBatch/",
+         dataType: "json",
+		 data: data,
+	 }).done(function(data) {
+			$("#classList").empty();
+			$("#classList").append(
+		    $('<option></option>')
+		    .val("0")
+		   .html("Please Select")); 
+       	$.each(data,function(key,value){
+          		classVal = value.grade.class_field;
+          		classid = value.grade.class_id;
+          		$("#classList").append(
+                        $('<option></option>')
+                               .val(classid)
+                               .html(classVal));
+        });
+	});
+});
+var batchClassId;
+$('#classList').on('change', function(){
+alert("In Class List Change function");
+$('#sectionList').prop("disabled", false);
+classDropdownId = $('#classList').val();
+alert(classDropdownId);
+batchDropdownId = window.batch_id;
+alert(batchDropdownId);
+data = {classDropdownId:classDropdownId,batchDropdownId:batchDropdownId};
+	 $.ajax({
+         type: "GET",
+         url:"/getBatchClassId/",
+         dataType: "json",
+		 data: data,
+	 }).done(function(data) {
+       	$.each(data,function(key,value){
+          		batchClassId = value.batch_class_id;
+				alert("BatchClassID is  -- " + batchClassId);	
+        });
+		getSectionsList(batchClassId);
+	});
+});
+sections = [];
+sectionName = [];
+function getSectionsList(batchClassId){
+alert("in getSection"); 
+var batch_class_id = window.batchClassId;
+alert(batch_class_id);
+data = {batch_class_id:batch_class_id};
+	 $.ajax({
+         type: "GET",
+         url:"/getSectionbyBatch/",
+         dataType: "json",
+		 data: data,
+	 }).done(function(data) { 
+			$("#sectionList").empty();
+			$("#sectionList").append(
+		    $('<option></option>')
+		    .val("0")
+		   .html("Please Select")); 
+       	$.each(data,function(key,value){
+		  var i =0;
+			sections = []; 
+			sectionName = [];
+			$.each(data,function(key,value){
+			sections[i] = value.class_sec.sectionId;
+			sectionName[i] = value.class_sec.section;
+			alert("Sections are -- " + sections);
+			i++;
+			});	 
+
+			for (var j=0;j<sectionName.length;j++){
+			$('<option/>').val(sections[j]).html(sectionName[j]).appendTo('#sectionList');
+			}
+			var usedNames = {};
+			$("select[id='sectionList'] > option").each(function () {
+			if(usedNames[this.text]) {
+            $(this).remove();
+			} else {
+            usedNames[this.text] = this.value;
+			}
+			}); 
+        });
+	 
+	 });
+};
+batchClassSections_ID = [];
+$('#sectionList').on('change', function(){
+alert("In section Change");
+var sectionVal  = $('#sectionList').val();
+alert("sectionDropDownId -- " + sectionVal);
+var batchClassVal = window.batchClassId;
+alert(" batchClassValue -- " + batchClassVal);
+url = '/getBatchClassSectionIds/'
+data = {sectionVal:sectionVal,'batchClassVal[]':batchClassVal};
+	 $.ajax({
+         type: "GET",
+         url:url,
+		 data: data,
+         dataType: "json",
+	 }).done(function(data) {
+		 var i =0;
+		 batchClassSections_ID = [];
+		 $.each(data,function(key,value){
+		 batchClassSections_ID[i] = value.batch_class_section_id;
+		 alert("batchClassSections_ID are -- " + batchClassSections_ID);
+		 i++;
+		 });
+	    getStudentId(batchClassSections_ID)
+	 });
+});
+
+ studentId = []; 
+function getStudentId(batchClassSections_ID){
+alert("In Student Function");
+var batchClassSectionId = window.batchClassSections_ID;
+alert(batchClassSectionId);
+url = '/getStudentId/';
+data = {'batchClassSectionId[]':batchClassSectionId};
+	 $.ajax({
+         type: "GET",
+         url:url,
+		 data: data,
+         dataType: "json",
+	 }).done(function(data) {
+	     var i =0;
+		 studentId = []; 
+		 $.each(data,function(key,value){
+		  studentId[i] = value.student_id;
+		  alert("Students are -- " + studentId);
+		  i++;
+		 });
+	 });
+};
+
+$("#getReport").on("click", function() {
+alert("In Save Function");
+var StudentID = window.studentId;
+alert("sample -- " + StudentID);
+var examType = $('#examTypeList').val();
+alert(examType);
+url = '/getResult/'
+data = {'StudentID[]':StudentID,examType,examType};
+getRankingDetails(url,data)
+});
+
+
+</script>
+<!-- Main content -->
+<section class="content">
+	<div class="row">
+		<div class="col-xs-12">
+			<div class="box">
+				<div class="box-header">
+					<h3 class="box-title">View Results </h3>
+				
+				<div class="col-sm-12" style="margin-top:20px;">
+						<div class="col-sm-3">
+							<label>Select ExamType</label> <select class="form-control"
+								id="examTypeList">
+
+							</select>
+						</div>
+						<div class="col-sm-3">
+							<label>Select Batch</label> <select class="form-control"
+								id="batchList">
+
+							</select>
+						</div>
+						<div class="col-sm-3">
+							<label>Select Class</label> <select class="form-control"
+								id="classList">
+
+							</select>
+						</div>
+						<div class="col-sm-3">
+							<label>Select Section</label> <select class="form-control"
+								id="sectionList">
+
+							</select>
+						</div>
+						<div class="col-sm-2 form-group">
+						  <button type="button" class="btn btn-primary btn-md form-control col-sm-3" id="getReport" style="margin-top: 23px;" name="getReport"> Get Report </button> 
+						</div>
+						
+					</div>
+				</div>
+				<div class="box-body" id="AResult" style="display:none;" >
+					{% render_table resultList %}
+				</div>
+				<!-- /.box-body -->
+			</div>
+			<!-- /.box -->
+		</div>
+		<!-- /.col -->
+	</div>
+	<!-- /.row -->
+</section>
+<!-- /.content -->

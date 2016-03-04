@@ -1,0 +1,12 @@
+.weekday{
+	    text-align: center;
+    height: 70px;
+}
+
+.weekdayTd{
+	padding: 20px !important;
+}
+
+.modal-dialogTimetable{
+    width: 900px;	
+}

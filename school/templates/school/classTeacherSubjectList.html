@@ -1,0 +1,562 @@
+{% load table_tags %}
+{% load staticfiles %}
+<link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+<script src="{% static 'js/jquery-2.1.4.min.js' %}"></script>
+<script src="{% static 'js/bootstrap.min.js' %}"></script>
+<script>
+var  count=0;
+$('#deleteModal').on('hidden.bs.modal', function () {
+	   tab_handler('ClassTeacherSubject');
+	});
+$('#addClassTeacherSubject').on('hidden.bs.modal', function () {
+	   tab_handler('ClassTeacherSubject');
+	});
+$("#addDiv").on("click", function(){
+ $("#method").val('add');
+ method = 'add';
+});
+	
+var batchClassSubjectId;
+$('#addClassTeacherSubject').on('shown.bs.modal', function () {
+	 $.ajax({
+         type: "GET",
+         url:"/getBatch/",
+         dataType: "json",
+	 }).done(function(data) {
+				$("#selectBatch").empty();
+				$("#selectBatch").append(
+				  $('<option></option>')
+				      .val("0")
+				        .html("Please Select")); 	 
+        
+       	$.each(data,function(key,value){
+          		batch = value.fields.batch;
+          		batch_id = value.pk;
+          		$("#selectBatch").append(
+                        $('<option></option>')
+                           .val(batch_id)
+                            .html(batch));
+          	});
+			
+			
+			
+	if(method=="edit" || method=="view"){
+		 		
+			 	var url = '/viewBatch/'+'?batchClassSubjectId='+batchClassSubjectId;
+			 	$
+				.ajax({
+					url : url,
+					type : "GET",
+					dataType : 'json',}) 
+					.done(function(data) {						
+							$.each(data,function(key,value){
+				          		batchId = value.batch.batch_id;
+								alert(batchId);
+				          		$('#selectBatch').val(batchId);	
+								classID = value.grade.class_id;
+								alert(classID);
+								    $.each(data,function(key,value){
+					          		    	$("#selectClass").append(
+					          	                    $('<option></option>')
+					          	                           .val(value.grade.class_id)
+					          	                           .html(value.grade.class_field));
+				          		    });
+								$('#selectClass').val(classID);
+								classSubjectID = value.class_subject;
+								alert(classSubjectID);
+					
+			 	$
+				.ajax({
+					url : '/viewSubject/'+'?classSubjectID='+classSubjectID,
+					type : "GET",
+					dataType : 'json',})
+					.done(function(data) {
+					$.each(data,function(key,value){
+					subjectID = value.subject.subject_id;
+					alert(subjectID);
+					$("#selectSubject").append(
+					          $('<option></option>')
+					          	 .val(value.subject.subject_id)
+					          	   .html(value.subject.subject));
+					
+					});
+					$('#selectSubject').val(subjectID);
+					batch_class_secID = value.batch_class_sec;
+					alert(batch_class_secID);
+					$
+						.ajax({
+						url : '/viewSection/'+'?batch_class_secID='+batch_class_secID,
+						type : "GET",
+						dataType : 'json',})
+						.done(function(data) {
+						$.each(data,function(key,value){
+						sectionID = value.class_sec.sectionId;
+						alert(sectionID);
+						$("#selectSection").append(
+					          $('<option></option>')
+					          	 .val(value.class_sec.sectionId)
+					          	   .html(value.class_sec.section));
+						});
+						$('#selectSection').val(sectionID);
+						classTeacherId = value.class_teacher;
+						alert(classTeacherId)
+						$
+						.ajax({
+						url : '/viewTeacher/'+'?classTeacherId='+classTeacherId,
+						type : "GET",
+						dataType : 'json',})
+						.done(function(data) { 
+						$.each(data,function(key,value){
+						teachId = value.teacher.teacher_id;
+						alert(teachId);
+						$("#selectTeacher").append(
+					          $('<option></option>')
+					          	 .val(value.teacher.teacher_id)
+					          	   .html(value.teacher.teacher_first_name));
+						});
+						});
+					});
+				});
+	
+					});
+				    				 
+				});	
+		 } 
+			
+	});
+});
+$('#selectBatch').on('change', function(){
+	var batchId = $('#selectBatch').val()
+	alert("This is value --" + batchId);
+	getClassbyBatch(batchId);
+
+});
+
+function getClassbyBatch(batch_id){
+	alert("In function");
+	var url = '/getClassbyBatch/'+'?batch_id='+batch_id;
+	alert(url);
+	$.ajax({
+		  method: "GET",
+		  url: url,
+		  data: {},
+		  dataType:'json',
+		})
+		 .done(function( data ) {
+			  $('#selectClass').prop("disabled", false);
+			  $('#selectClass').empty();
+				$("#selectClass").append(
+				  $('<option></option>')
+				      .val("0")
+				        .html("Please Select"));
+			  $.each(data,function(key,value){
+			  class_id = value.pk;
+			  alert(value.grade.class_id);
+			  $('#selectClass').append('<option value="'+value.grade.class_id+'">'+value.grade.class_field+'</option>');
+		  });
+		  
+	});
+		  	  
+};
+
+$('#selectClass').on('change', function(){
+	var classval = $('#selectClass').val()
+	alert("This is value --" + classval);
+	getSubjectByClass(classval);
+});
+function getSubjectByClass(class_id){
+	alert("In function");
+	var url = '/getSubjectByClass/'+'?class_id='+class_id;
+	alert(url);
+	//alert("in ajax funtion getClassValue"+selectedOpt);
+	$.ajax({
+		  method: "GET",
+		  url: url,
+		  data: {},
+		  dataType:'json',
+		})
+		 .done(function( data ) {
+			  $('#selectSubject').prop("disabled", false);
+			  $('#selectSubject').empty();
+				$("#selectSubject").append(
+				  $('<option></option>')
+				      .val("0")
+				        .html("Please Select"));
+			  $.each(data,function(key,value){ 
+			  subject_id = value.pk;
+			  alert(value.subject.subject_id);
+			  $('#selectSubject').append('<option value="'+value.subject.subject_id+'">'+value.subject.subject+'</option>');
+		  });
+		  })
+		  	  
+};
+var batchClassId
+$('#selectClass').on('change', function(){
+alert("In Class Change Function");
+var classDropdownId = $('#selectClass').val();
+alert("This is ClassID -- " + classDropdownId )
+var batchDropdownId = $('#selectBatch').val();
+alert("This is BatchId -- " + batchDropdownId )
+var data = {classDropdownId:classDropdownId,batchDropdownId:batchDropdownId};
+	var url = '/getBatchClassId/'
+	$
+	.ajax({
+		url : url,
+		type : "GET",
+		dataType: "json",
+		data : data,
+		success : function(result) {
+		$.each(result,function(key,value){
+		batchClassId = value.batch_class_id;
+		alert("This is BatchClassID -- " + batchClassId );
+		getSectionbyBatch(batchClassId);
+		});
+			},
+		error : function(result) {
+			alert('hi i am giving weero'+result);
+		}
+	});
+});
+
+function getSectionbyBatch(batch_class_id){
+	alert("In function");
+	var url = '/getSectionbyBatch/'+'?batch_class_id='+batch_class_id;
+	alert(url);
+	$.ajax({
+		  method: "GET",
+		  url: url,
+		  data: {},
+		  dataType:'json',
+		})
+		 .done(function( data ) {
+			  $('#selectSection').prop("disabled", false);
+			  $('#selectSection').empty();
+			  	$("#selectSection").append(
+				  $('<option></option>')
+				      .val("0")
+				        .html("Please Select"));
+			  $.each(data,function(key,value){
+			  section_id = value.pk;
+			  alert("This is Section ID--" + value.class_sec.sectionId);
+			  $('#selectSection').append('<option value="'+value.class_sec.sectionId+'">'+value.class_sec.section+'</option>');
+		  });
+		  })
+};
+var batchClass_SecId;
+$('#selectSection').on('change', function(){
+alert("In Section Change Function");
+var SectionDropId = $('#selectSection').val();
+alert("This is SectionDropId --- " + SectionDropId);
+var batchClassID = window.batchClassId;
+alert("This is batchClassSection Id --" + batchClassID);
+var data = {SectionDropId:SectionDropId,batchClassID:batchClassID};
+var url = '/getBatchClassSectionId/';
+alert(url);
+data = 
+	$
+	.ajax({
+		url : url,
+		type : "GET",
+		dataType: "json",
+		data : data,
+		success : function(result) {
+		alert("This is Success -- " + result);
+		$.each(result,function(key,value){
+		batchClass_SecId = value.batch_class_section_id;
+		alert("This is batch Class Section ID -- " + batchClass_SecId);
+		populateTeacher(batchClass_SecId)
+		$('#selectTeacher').empty();
+		});
+			},
+		error : function(result) {
+			alert('hi i am giving weero'+result);
+		}
+	});
+
+});
+var class_teacher_id;
+function populateTeacher(batchClass_SecId){
+//alert("In teacher function");
+	var url = '/populateTeacher/'+'?batchClass_SecId='+batchClass_SecId;
+	alert(url);
+	$.ajax({
+		  method: "GET",
+		  url: url,
+		  data: {},
+		  dataType:'json',
+		})
+		 .done(function( data ) {
+			  $('#selectTeacher').prop("disabled", false);
+			 $("#selectTeacher").append(
+				  $('<option></option>')
+				      .val("0")
+				        .html("Please Select"));
+			  $.each(data,function(key,value){
+			  class_teacher_ids = value.pk;
+			  class_teacher_id = value.class_teacher_id;
+			  alert("This is class Teacher Id -- " + class_teacher_id);
+			  $('#selectTeacher').append('<option value="'+value.teacher.teacher_id+'">'+value.teacher.teacher_first_name+'</option>');
+		  });
+		  })
+};
+var class_subject_id;
+$('#selectSubject').on('change', function(){
+alert("asd");
+var classDropdownId = $('#selectClass').val();
+alert(classDropdownId);
+var subjectDropdownId = $(this).val();
+alert(subjectDropdownId);
+var data = {classDropdownId:classDropdownId,subjectDropdownId:subjectDropdownId};
+	var url = '/getClassSubjectId/';
+	$
+	.ajax({
+		url : url,
+		type : "GET",
+		dataType: "json",
+		data : data,
+		success : function(result) {
+			alert(result);
+			//var asd = result.fields.subject;
+			//alert("This is -- " + asd);
+			//alert(result.subject);
+			//alert(result.pk);
+			$.each(result,function(key,value){
+			class_subject_id = value.class_subject_id;
+			alert( "This is class_subject_id -- " + class_subject_id);
+		});
+	},
+		error : function(result) {
+			alert('hi i am giving weero'+result);
+		}
+	});
+});
+var class_teacherId;
+$('#selectTeacher').on('change', function(){
+alert("In teacher Change function");
+var teacherDropId = $('#selectTeacher').val();
+alert(teacherDropId);
+var batchClassSectionID = window.batchClass_SecId
+alert("adasdasdasdasdasdas---" + batchClassSectionID);
+var data = {teacherDropId:teacherDropId,batchClassSectionID:batchClassSectionID};
+	var url = '/getClassTeacherId/';
+	$
+	.ajax({
+		url : url,
+		type : "GET",
+		dataType: "json",
+		data : data,
+		success : function(result) {
+			alert(result);
+			//var asd = result.fields.subject;
+			//alert("This is -- " + asd);
+			//alert(result.subject);
+			//alert(result.pk);
+			$.each(result,function(key,value){
+			class_teacherId = value.class_teacher_id;
+			alert( "This is class_teacher_id -- " + class_teacherId);
+		});
+	},
+		error : function(result) {
+			alert('hi i am giving weero'+result);
+		}
+	});
+});
+
+
+$("#saveSyllabus").on("click", function() {
+alert("In Save Function");
+var classSubjectId = window.class_subject_id;
+alert(classSubjectId);
+var classTeacherId = window.class_teacherId
+alert(classTeacherId);
+var batchClassID = window.batchClassId
+alert(batchClassID);
+var batchClassSecId = window.batchClass_SecId;
+alert(batchClassSecId);
+var method = $("#method").val();
+if(method=='add'){
+	alert("inside"+ method+classSubjectId+classTeacherId+batchClassID+batchClassSecId)
+	var data = {classSubjectId:classSubjectId,classTeacherId:classTeacherId,batchClassID:batchClassID,batchClassSecId:batchClassSecId,method};
+	
+}
+else if(method=='edit'){
+	var data = {batchClassSubjectId:batchClassSubjectId,classSubjectId:classSubjectId,classTeacherId:classTeacherId,batchClassID:batchClassID,batchClassSecId:batchClassSecId,method};
+}
+var url = '/addClassTeacherSubjects/';
+	$
+	.ajax({
+		url : url,
+		type : "POST",
+		dataType: "json",
+		data : data,
+		success : function(result) {
+			alert('hi i am '+result);
+		},
+		error : function(result) {
+			alert('hi i am giving weero'+result);
+		}
+	});
+});
+var classTeachSubID;
+$(".fa-edit").on("click", function() {
+	batchClassSubjectId = $(this).closest('tr').find('td:eq(0)').html();
+		$("#method").val('edit');
+		method = 'edit';
+		
+		alert("Hello edit goes here");
+		alert(method);
+		$("#myModalLabel").html('Edit Class Teacher Subject');
+		$("#saveSyllabus").html('Edit');		
+		$('#addClassTeacherSubject').modal('show'); 
+		
+		/* var url = '/viewBatchClassSec/'+'?batchClassSecId='+batchClassSecId;
+	 	$
+		.ajax({
+			url : url,
+			type : "GET",
+			dataType : 'json',}) 
+			.done(function(data) {
+				
+					$.each(data,function(key,value){
+		          		alert(value.fields.class_sec)
+		          		
+		          		$('#selectSection').val(value.fields.class_sec);
+		          		alert("end");
+		          	});
+				 
+		}); */
+		
+	  });
+
+$(".fa-file-text").on("click", function() {
+	batchClassSubjectId = $(this).closest('tr').find('td:eq(0)').html();
+	$('#addClassTeacherSubject').modal('show'); 
+	method = 'view';
+	 $('#selectBatch').prop("disabled", true);
+	 $('#selectClass').prop("disabled", true);
+	 $('#selectSubject').prop("disabled", true);
+	 $('#selectTeacher').prop("disabled", true);
+	 $('#selectSection').prop("disabled", true);
+	 
+	 $('#saveSyllabus').hide();
+	 //$('#addSchoolModal').modal('show'); 
+	 $("#myModalLabel").html('School Details');
+});
+
+</script>
+<div class="col-md-3 col-sm-6 col-xs-12" style="float: right;"
+	data-toggle="modal" data-target="#addClassTeacherSubject" id="addDiv">
+	<div class="info-box">
+		<span class="info-box-icon bg-green"><i
+			class="fa fa-plus-circle"></i></span>
+
+		<div class="info-box-content" id="addSyllabus">
+			<span class="info-box-text" style="margin-left:20px;font-size:20px;">ADD</span>
+		</div>
+		<!-- /.info-box-content -->
+	</div>
+	<!-- /.info-box -->
+</div>
+<!-- Add Batch Modal -->
+<div class="modal fade" id="addClassTeacherSubject" tabindex="-1" role="dialog"
+	aria-labelledby="myModalLabel">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal"
+					aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+				<h4 class="modal-title" id="myModalLabel">Assign Subject to Teacher</h4>
+			</div>
+			<div class="modal-body">
+				<!-- <form role="form" id="batchForm" method="POST" action="{% url 'batch' %}">
+        {% csrf_token %} -->
+				<!-- text input -->
+				<div class="form-group" >
+                  <label>Select Batch</label>
+                  <select class="form-control" id="selectBatch">
+                  </select>
+                </div>
+				<div class="form-group" >
+                  <label>Select Class</label>
+                  <select class="form-control" id="selectClass">
+                  </select>
+                </div>
+				<div class="form-group" >
+                  <label>Select Subject</label>
+                  <select class="form-control" id="selectSubject">
+                  </select>
+                </div>
+				<div class="form-group" >
+                  <label>Select Section</label>
+                  <select class="form-control" id="selectSection">
+                  </select>
+                </div>
+				<div class="form-group" >
+                  <label>Select Teacher</label>
+                  <select class="form-control" id="selectTeacher">
+                  </select>
+                </div>
+				<div class="form-group">
+					<!--<label>Topic Name</label> <input type="text" class="form-control"
+						placeholder="Enter Syllabus" name="topicName" id="topicName">-->
+					<input type="hidden" id="method" value="add">
+					<input type="hidden" id="syllabusId" name="syllabusId">
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-primary saveSyllabus" name="save" id ="saveSyllabus"
+						data-dismiss="modal">Save</button>
+				</div>
+				<!-- </form> -->
+			</div>
+
+		</div>
+	</div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog"
+	aria-labelledby="myModalLabel">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal"
+					aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+				<h4 class="modal-title" id="myModalLabel">Are you sure you want
+					to Delete the Record ?</h4>
+			</div>
+			<div class="modal-body">
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" id="delete"
+						data-dismiss="modal">Yes</button>
+					<button type="submit" class="btn btn-primary" name="no"
+						data-dismiss="modal">No</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Main content -->
+<section class="content">
+	<div class="row">
+		<div class="col-xs-12">
+			<div class="box">
+				<div class="box-header">
+					<h3 class="box-title">List of Class Subject and Teacher</h3>
+				</div>
+				<!-- /.box-header -->
+				<div class="box-body">{% render_table classTeachSub %}</div>
+				<!-- /.box-body -->
+			</div>
+			<!-- /.box -->
+		</div>
+		<!-- /.col -->
+	</div>
+	<!-- /.row -->
+</section>
+<!-- /.content -->

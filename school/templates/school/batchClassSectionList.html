@@ -1,0 +1,304 @@
+{% load table_tags %}
+
+<script>
+var method;
+
+$('#batchClassSecModal').on('hidden.bs.modal', function () {
+	   tab_handler('Batch Class Section');
+	})
+	
+$('#deleteModal').on('hidden.bs.modal', function () {
+	   tab_handler('Batch Class Section');
+	})
+	   
+var batchClassList;	
+$('#batchClassSecModal').on('shown.bs.modal', function () {
+	var selectedSec;
+	 $.ajax({
+        type: "GET",
+        url:"/getBatchClassSecOptions/",
+        dataType: "json",
+	 }).done(function(data) {
+		 
+		 	$("#selectBatch").empty();
+		 	$("#selectBatch").append(
+                    $('<option></option>')
+                           .val("0")
+                           .html("Please Select"));		 	
+		 	batchClassList = data.batchClassList;		
+		 	$.each(batchClassList,function(key,value){
+		 		$("#selectBatch").append(
+	                       $('<option></option>')
+	                              .val(value.batch.batch_id)
+	                              .html(value.batch.batch)); 
+		 		 
+		 	    }); 
+		 	  
+		 	 var usedNames = {};
+		 	 $("select[id='selectBatch'] > option").each(function () {
+		 	    if(usedNames[this.text]) {
+		 	        $(this).remove();
+		 	    } else {
+		 	        usedNames[this.text] = this.value;
+		 	    }
+		 	});
+      		
+      		$("#selectSection").empty();
+      		$("#selectSection").append(
+                    $('<option></option>')
+                           .val("0")
+                           .html("Please Select")); 
+      		var sectionList = data.sectionList;
+      		
+      		for(i=0;i<sectionList.length;i++){
+		 		
+	       		  //$('#selectSection').val("29"); 
+	      			var section = sectionList[i]; 
+	      			$("#selectSection").append(
+	                       $('<option></option>')
+	                              .val(section.pk)
+	                              .html(section.fields.section));
+	      		} 		
+            	 	
+		 	if(method=="edit" || method=="view"){
+		 		
+			 	var url = '/viewBatchClassSec/'+'?batchClassSecId='+batchClassSecId;
+			 	$
+				.ajax({
+					url : url,
+					type : "GET",
+					dataType : 'json',}) 
+					.done(function(data) {						
+							$.each(data,function(key,value){
+				          		selectedBatch = value.batch.batch_id;
+				          		selectedSec = value.class_sec;
+				          		selectedClass = value.grade.class_id;
+				          		$('#selectSection').val(selectedSec);
+				          		$('#selectBatch').val(selectedBatch);
+				          		
+				          		$.ajax({
+				          		    method: "GET",
+				          		    url: '/getClassByBatch/'+'?batchId='+selectedBatch,
+				          		    data: {},
+				          		    dataType:'json',
+				          		 })
+				          		 .done(function( data ) {
+				          			$("#selectClass").empty();
+				          		    $("#selectClass").append(
+				          		            $('<option></option>')
+				          		                   .val("0")
+				          		                   .html("Please Select")); 
+					          		     console.log(data);
+					          		     $.each(data,function(key,value){
+					          		    	$("#selectClass").append(
+					          	                    $('<option></option>')
+					          	                           .val(value.grade.class_id)
+					          	                           .html(value.grade.class_field));
+				          		    });
+					          	   
+					          	   $('#selectClass').val(selectedClass);
+				          		  });				          						          		
+				          	});						 
+				}); 		 	
+		 	} 
+		 	
+     });
+});
+
+var batchClassSecId;
+$("#saveBatchClassSec").on("click", function() {
+	alert("in add");
+		method = $("#method").val();
+	
+		batchName = $("#selectBatch").val();
+		className = $("#selectClass").val();
+		section = $("#selectSection").val();
+		if(method=='add'){
+			
+			alert("batchName: "+batchName +" className: "+ className+"section: "+section)
+			var data = {batchName:batchName, className:className, section:section, method};
+		}else if(method == 'edit'){
+			var data = {batchClassSecId:batchClassSecId, batchName:batchName, className:className, section:section, method};
+		} 
+		var url = '/addBatchClassSec/';
+		$
+		.ajax({
+			url : url,
+			type : "POST",
+			dataType: "json",
+			data : data,
+			success : function(result) {
+				alert('hi i am '+result);
+			},
+			error : function(result) {
+				alert('hi i am giving weero'+result);
+			}
+		});
+	  });
+	  
+$("#selectBatch").change(function () {
+    var batchId = this.value;
+   
+    $("#selectClass").empty();
+    $("#selectClass").append(
+            $('<option></option>')
+                   .val("0")
+                   .html("Please Select")); 
+    for(i=0;i<batchClassList.length;i++){
+    	batchClass = batchClassList[i];
+    	
+    	if(batchClass.batch.batch_id == batchId){
+    		
+    		$("#selectClass").append(
+                    $('<option></option>')
+                           .val(batchClass.grade.class_id)
+                           .html(batchClass.grade.class_field)); 
+    	}
+    }
+}); 
+
+$(".fa-trash-o").on("click", function() {
+	batchClassSecId = $(this).closest('tr').find('td:eq(0)').html();
+	$("#delBatchClassSec").on("click", function(){
+		alert("batchClassSecId "+batchClassSecId);
+		var url = '/delBatchClassSec/'+'?batchClassSecId='+batchClassSecId;
+	 	$
+		.ajax({
+			url : url,
+			type : "GET",
+			dataType : {},}) 
+			.done(function(data) {
+		});
+	});
+  });
+  
+$(".fa-edit").on("click", function() {
+	batchClassSecId = $(this).closest('tr').find('td:eq(0)').html();
+		$("#method").val('edit');
+		method = 'edit';
+		
+		alert("Hello edit goes here");
+		alert(method);
+		$("#myModalLabel").html('Edit Batch Class Section');
+		$("#saveBatchClassSec").html('Edit');		
+		$('#batchClassSecModal').modal('show'); 
+		
+	  });
+  
+$(".fa-file-text").on("click", function() {
+	batchClassSecId = $(this).closest('tr').find('td:eq(0)').html();	
+	$('#batchClassSecModal').modal('show'); 
+	method = 'view';
+	$("#selectBatch").prop("disabled", true);
+	$("#selectClass").prop("disabled", true);
+	$("#selectSection").prop("disabled", true);
+	$('#saveBatchClassSec').hide();	
+	$("#myModalLabel").html('Batch Class Section Details');
+});
+
+$("#addDiv").on("click", function(){
+	$("#method").val('add');
+	method = 'add';
+});
+</script>
+
+<div class="col-md-3 col-sm-6 col-xs-12" style="float: right;"
+	data-toggle="modal" data-target="#batchClassSecModal" id="addDiv">
+	<div class="info-box">
+		<span class="info-box-icon bg-green"><i
+			class="fa fa-plus-circle"></i></span>
+
+		<div class="info-box-content" id="addBatchClassSec">
+			<span class="info-box-text" style="margin-left:20px;font-size:20px;">Add</span>
+		</div>
+		<!-- /.info-box-content -->
+	</div>
+	<!-- /.info-box -->
+</div>
+<!-- Add School Modal -->
+<div class="modal fade" id="batchClassSecModal" tabindex="-1" role="dialog"
+	aria-labelledby="myModalLabel">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal"
+					aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+				<h4 class="modal-title" id="myModalLabel">Add</h4>
+			</div>
+			<div class="modal-body">
+				<!-- <form role="form" id="batchForm" method="POST" action="{% url 'batch' %}">
+        {% csrf_token %} -->
+				<!-- text input -->
+				<div class="form-group">
+					<label>Select Batch</label> <select class="form-control"
+							id="selectBatch">
+						</select>
+						
+						<label>Select Class</label> <select class="form-control"
+							id="selectClass">
+							<option value="0">Please Select</option>
+						</select>
+						
+						<label>Select Section</label> <select class="form-control"
+							id="selectSection">
+						</select>
+					<input type="hidden" id="method" value="add">
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-primary" name="save" id="saveBatchClassSec"
+						data-dismiss="modal">Save</button>
+				</div>
+				<!-- </form> -->
+			</div>
+
+		</div>
+	</div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog"
+	aria-labelledby="myModalLabel">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal"
+					aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+				<h4 class="modal-title" id="myModalLabel">Are you sure you want
+					to Delete the Record ?</h4>
+			</div>
+			<div class="modal-body">
+				<div class="modal-footer">
+					<button type="submit" class="btn btn-default" id="delBatchClassSec"
+						data-dismiss="modal">Yes</button>
+					<button type="button" class="btn btn-primary" name="no"
+						data-dismiss="modal">No</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Main content -->
+<section class="content">
+	<div class="row">
+		<div class="col-xs-12">
+			<div class="box">
+				<div class="box-header">
+					<h3 class="box-title">List of Batch Class Section List</h3>
+				</div>
+				<!-- /.box-header -->
+				<div class="box-body">{% render_table batchClassSecList %}</div>
+				<!-- /.box-body -->
+			</div>
+			<!-- /.box -->
+		</div>
+		<!-- /.col -->
+	</div>
+	<!-- /.row -->
+</section>
+<!-- /.content -->

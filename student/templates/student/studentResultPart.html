@@ -1,0 +1,16 @@
+{% load table_tags %}
+<script type="text/javascript">
+$(document).ready(function(){
+$(".fa-file-text").on("click", function() {
+	alert("hit view");
+	$('#showStudentResultModal').modal('show'); 	
+	studentId = $(this).closest('tr').find('td:eq(0)').html();
+	examTypeId=$('#idExamType option:selected').val()
+	var url= '/viewStudentReult/';
+	viewStudentResult(url,studentId,examTypeId);
+});
+
+
+});
+</script>
+{% render_table studResultTable %}

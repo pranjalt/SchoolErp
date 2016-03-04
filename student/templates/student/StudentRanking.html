@@ -1,0 +1,132 @@
+{% load table_tags %}
+{% load staticfiles %}
+<link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+<script src="{% static 'js/jquery-2.1.4.min.js' %}"></script>
+<script src="{% static 'js/bootstrap.min.js' %}"></script>
+<script src="{% static 'js/commonUtils.js' %}"></script>
+
+
+<style type="text/css">
+
+ .modal.modal-wide .modal-dialog {
+  width: 80%;
+}
+.modal-wide .modal-body {
+  overflow-y: auto;
+}
+#idStudentname{
+background:none;
+border:none;
+}
+</style>
+
+<script>
+$(document).ready(function(){
+	
+	$('#idStudRankingTable').prop("hidden", true);
+	$('#idClass').addClass('form-control');	
+	$('invisible').css('display', 'block !important');
+	$('#idClass').prop("disabled", true);
+	$('#idSection').prop("disabled", true);
+	
+	$("#idBatch").on("change", function() { 
+		selectedOpt=$(this).find(':selected').val();
+		alert(selectedOpt);
+		getClassesValue(selectedOpt);	
+	} );
+	
+	$("#idClass").on("change", function() { 
+		selectedOpt=$(this).find(':selected').val();
+		alert(selectedOpt);
+		getSectionValue(selectedOpt);
+	} );
+	
+	$("#idSection").on("change", function() { 
+		var section = $("#idSection option:selected").val();
+		$('#bcsId').val(section);
+	});	
+	
+});
+
+function searchRankingList()
+{
+	if($('#idBatch').val() && $('#idClass').val() && $('#idSection').val() && $('#idExamType').val() != null)
+	{
+		var bcsId =$("#bcsId").val();
+		var examTypeId= $('#idExamType').val();
+		url = '/getStudentRankingByClassExam/'
+		getStudentRankingFun(url,bcsId,examTypeId)	
+	}else{
+		alert("bacthId  Class ,section or exam type is not field");
+	}
+	
+}
+
+
+</script>
+
+<section class="content">
+ 
+ <div class="box">
+    <div class="box-header">
+     <h3 class="box-title"></h3>
+    </div>
+    <!-- /.box-header -->
+    <div class="box-body">
+    	
+    	  <div class="col-sm-12">
+			<div class="row">
+				
+					<div class="col-sm-2 form-group">
+						  <label>Search Ranking by: </label>	
+					</div>
+					<div class="col-sm-2 form-group">
+						<label>Batch</label>
+						{{bform.batch}}
+					</div>
+					<div class="col-sm-2 form-group col-ms-offset-1">
+						  <label>Class</label>
+						   {{clsform.grade_id}}
+					</div>
+					<div class="col-sm-2 form-group col-ms-offset-1">
+						  <label>section</label>
+							{{secForm.section}}
+					</div>	
+					
+					<input type="hidden" id="bcsId" value="">
+					
+					<div class="col-sm-2 form-group col-ms-offset-1">
+						  <label>Exam Type</label>
+							{{examTypeFrm.exam_type}}
+					</div>	
+							
+					<div class="col-sm-2 form-group">
+						  <label  id="invisible"> test</label>
+						  <button type="button" class="btn btn-primary btn-md glyphicon glyphicon-search form-control col-sm-3" id="searchResultBtn" name="search" onclick="searchRankingList();">Search </button> 
+					</div>
+					
+			</div>
+ 		</div>
+ 		
+ 	</div>
+ 	<!-- /.box-body -->
+ </div>
+    
+<!-- Main content -->
+<section class="content" id="idStudRankingTable">
+ <div class="row">
+  <div class="col-xs-12">
+   <div class="box">
+    <div class="box-header">
+     <h3 class="box-title">List of Student</h3>
+    </div>
+    <!-- /.box-header -->
+    <div class="box-body" id="student_ranking">{% render_table studRankingTable %}</div>
+    <!-- /.box-body -->
+   </div>
+   <!-- /.box -->
+  </div>
+  <!-- /.col -->
+ </div>
+ <!-- /.row -->
+</section>

@@ -1,0 +1,235 @@
+{% load table_tags %}
+{% load staticfiles %}
+<link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+<script src="{% static 'js/jquery-2.1.4.min.js' %}"></script>
+<script src="{% static 'js/bootstrap.min.js' %}"></script>
+<script src="{% static 'js/commonUtils.js' %}"></script>
+
+<script>
+var batchClassSubjectId;
+$(document).ready(function(){
+alert("In Function");
+	 $.ajax({
+         type: "GET",
+         url:"/getBatch/",
+         dataType: "json",
+	 }).done(function(data) {
+				$("#batchList").empty();
+				$("#batchList").append(
+				  $('<option></option>')
+				      .val("0")
+				        .html("Please Select")); 	 
+        
+       	$.each(data,function(key,value){
+          		batch = value.fields.batch;
+          		batch_id = value.pk;
+          		$("#batchList").append(
+                        $('<option></option>')
+                           .val(batch_id)
+                            .html(batch));
+          	});
+		});
+	});
+$('#batchList').on('change', function(){
+	var batchId = $('#batchList').val()
+	alert("This is value --" + batchId);
+	getClassbyBatch(batchId);
+});
+var batchClassId;
+function getClassbyBatch(batch_id){
+	alert("In function");
+	var url = '/getClassbyBatch/'+'?batch_id='+batch_id;
+	alert(url);
+	$.ajax({
+		  method: "GET",
+		  url: url,
+		  data: {},
+		  dataType:'json',
+		})
+		 .done(function( data ) {
+			  $('#classList').prop("disabled", false);
+			  $('#classList').empty();
+				$("#classList").append(
+				  $('<option></option>')
+				      .val("0")
+				        .html("Please Select"));
+			  $.each(data,function(key,value){
+			  class_id = value.pk;
+			  alert(value.grade.class_id);
+			  $('#classList').append('<option value="'+value.grade.class_id+'">'+value.grade.class_field+'</option>');
+			  batchClassId =  value.batch_class_id
+			  alert("This is batchClassId -- " + batchClassId);
+			  
+		  });
+	});
+};
+var batchClassId
+$('#classList').on('change', function(){
+alert("In Class Change Function");
+var classDropdownId = $('#classList').val();
+alert("This is ClassID -- " + classDropdownId )
+var batchDropdownId = $('#batchList').val();
+alert("This is BatchId -- " + batchDropdownId )
+var data = {classDropdownId:classDropdownId,batchDropdownId:batchDropdownId};
+	var url = '/getBatchClassId/'
+	$
+	.ajax({
+		url : url,
+		type : "GET",
+		dataType: "json",
+		data : data,
+		success : function(result) {
+		$.each(result,function(key,value){
+		batchClassId = value.batch_class_id;
+		alert("This is BatchClassID -- " + batchClassId );
+		getSectionbyBatch(batchClassId);
+		});
+			},
+		error : function(result) {
+			alert('hi i am giving weero'+result);
+		}
+	});
+});
+
+function getSectionbyBatch(batch_class_id){
+	alert("In function");
+	var url = '/getSectionbyBatch/'+'?batch_class_id='+batch_class_id;
+	alert(url);
+	$.ajax({
+		  method: "GET",
+		  url: url,
+		  data: {},
+		  dataType:'json',
+		})
+		 .done(function( data ) {
+			  $('#sectionList').prop("disabled", false);
+			  $('#sectionList').empty();
+			  	$("#sectionList").append(
+				  $('<option></option>')
+				      .val("0")
+				        .html("Please Select"));
+			  $.each(data,function(key,value){
+			  section_id = value.pk;
+			  alert("This is Section ID--" + value.class_sec.sectionId);
+			  $('#sectionList').append('<option value="'+value.class_sec.sectionId+'">'+value.class_sec.section+'</option>');
+		  });
+		  })
+};
+
+var batchClass_SecId;
+$('#sectionList').on('change', function(){
+alert("In Section Change Function");
+var SectionDropId = $('#sectionList').val();
+alert("This is SectionDropId --- " + SectionDropId);
+var batchClassID = window.batchClassId;
+alert("This is batchClassId --" + batchClassID);
+var data = {SectionDropId:SectionDropId,batchClassID:batchClassID};
+var url = '/getBatchClassSectionId/';
+alert(url);
+data = 
+	$
+	.ajax({
+		url : url,
+		type : "GET",
+		dataType: "json",
+		data : data,
+		success : function(result) {
+		alert("This is Success -- " + result);
+		$.each(result,function(key,value){
+		batchClass_SecId = value.batch_class_section_id;
+		alert("This is batch Class Section ID -- " + batchClass_SecId);
+		getStudentId(batchClass_SecId);
+		});
+			},
+		error : function(result) {
+			
+			alert('hi i am giving weero'+result);
+		}
+	});
+
+});
+var studentId = [];
+function getStudentId(batchClass_SecId){
+	alert("In function");
+	var url = '/getStudentbyBatchClassSecID/'+'?batchClass_SecId='+batchClass_SecId;
+	alert(url);
+	$.ajax({
+		  method: "GET",
+		  url: url,
+		  data: {},
+		  dataType:'json',
+		})
+		 .done(function( data ) {
+		 var i =0;
+		 $.each(data,function(key,value){
+		  studentId[i] = value.student_id;
+		  alert("Student ID's are -- " + studentId);
+		  i++;
+		 });
+    });
+};
+
+$("#getReport").on("click", function() {
+alert("In Save Function");
+var StudentID = window.studentId;
+alert("sample -- " + StudentID);
+var datefield = $('#date').val();
+alert(datefield);
+var data={'StudentID[]':StudentID,datefield:datefield}
+var url='/getAttendanceInformation/';
+getAttendenceResultList(url,data)
+
+//$("#tabledivision").show();
+
+
+});
+
+</script>
+<!-- Main content -->
+<section class="content">
+	<div class="row">
+		<div class="col-xs-12">
+			<div class="box">
+				<div class="box-header">
+					<h3 class="box-title">View Class Attendance </h3>
+				
+				<!-- /.box-header -->
+				<div class="col-sm-12" style="margin-top:20px;">
+						<div class="col-sm-3">
+							<label>Select Batch</label> <select class="form-control"
+								id="batchList">
+
+							</select>
+						</div>
+						<div class="col-sm-3">
+							<label>Select Class</label> <select class="form-control"
+								id="classList">
+
+							</select>
+						</div>
+						<div class="col-sm-3">
+							<label>Select Section</label> <select class="form-control"
+								id="sectionList">
+
+							</select>
+						</div>
+						<div class="col-sm-3">
+						<label>Date</label>
+						<input type="date" class="form-control" placeholder="Enter Date"
+						name="date" id="date">
+						</div>
+						<div style="margin-top:8%;"><input type="button" value="Get Report" id="getReport"></div>
+					</div>
+				</div>
+				<div class="box-body" style="display:none;" id="AResult">
+					{% render_table attendanceList %}
+				</div>
+				<!-- /.box-body -->
+			</div>
+			<!-- /.box -->
+		</div>
+		<!-- /.col -->
+	</div>
+	<!-- /.row -->
+</section>
+<!-- /.content -->

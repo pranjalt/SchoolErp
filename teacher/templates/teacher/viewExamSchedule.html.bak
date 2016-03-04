@@ -1,0 +1,281 @@
+{% load table_tags %}
+{% load staticfiles %}
+<link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+<script src="{% static 'js/jquery-2.1.4.min.js' %}"></script>
+<script src="{% static 'js/bootstrap.min.js' %}"></script>
+<script src="{% static 'js/commonUtils.js' %}"></script>
+
+<script>
+var examTypeId;
+var teacher_id = 25;
+$(document).ready(function(){
+$('#batchList').prop("disabled", true);
+$('#classList').prop("disabled", true);
+$('#selectSubject').prop("disabled", true);
+alert("In Function");
+	 $.ajax({
+         type: "GET",
+         url:"/getExamTypeList/",
+         dataType: "json",
+	 }).done(function(data) {
+				$("#examTypeList").empty();
+				$("#examTypeList").append(
+				  $('<option></option>')
+				      .val("0")
+				        .html("Please Select")); 	         
+       	$.each(data,function(key,value){
+          		exam_type = value.fields.exam_type;
+          		exam_type_id = value.pk;
+          		
+          		$("#examTypeList").append(
+                        $('<option></option>')
+                               .val(exam_type_id)
+                               .html(exam_type));
+          	});
+		
+      });
+});
+	
+$('#examTypeList').on('change', function(){
+	  $('#classList').prop("disabled", false);
+	   examTypeId = $('#examTypeList').val();
+	  alert("This is Pk -- " + examTypeId);
+	  var teacherId = window.teacher_id;
+	  getBatchClassSectionId(teacherId)
+});
+var batchClassId = [];
+function getBatchClassSectionId(teacher_id){
+	alert("In function");
+	var url = '/getBatchClassSecIdbyTeacher/'+'?teacher_id='+teacher_id;
+	alert(url);
+	$.ajax({
+		  method: "GET",
+		  url: url,
+		  data: {},
+		  dataType:'json',
+		})
+		 .done(function( data ) {
+		  var i =0;
+		 $.each(data,function(key,value){
+		  batchClassId[i] = value.batch_class_sec.batch_class;
+		  alert("batchClassId's are -- " + batchClassId);
+		  i++;
+		 });
+		 getClassByBatchClassId(batchClassId);
+    });
+};
+var classID = [];
+var className = [];
+function getClassByBatchClassId(batchClassId){
+alert("In Function");
+var bacthClass = window.batchClassId;
+alert("This are bacthClass -- " + bacthClass);
+url = '/getClassbyBacthClassId/';
+data = {'bacthClass[]':bacthClass};
+alert(url);
+	$.ajax({
+		  method: "GET",
+		  url: url,
+		  data: data,
+		  dataType:'json',
+		})
+		 .done(function( data ) {
+		 $("#classList").empty();
+		 $("#classList").append(
+		 $('<option></option>')
+			.val("0")
+		.html("Please Select"))
+		  var j =0;
+		 $.each(data,function(key,value){
+		  classID[j] = value.grade.class_id;
+		  className[j] = value.grade.class_field;
+		  alert("classID's are -- " + classID);
+		  alert("classNames's are -- " + className);
+		  j++;
+		 });
+		 
+		 for (var j=0;j<className.length;j++){
+         $('<option/>').val(classID[j]).html(className[j]).appendTo('#classList');
+         }
+			var usedNames = {};
+			$("select[id='classList'] > option").each(function () {
+			if(usedNames[this.text]) {
+            $(this).remove();
+			} else {
+            usedNames[this.text] = this.value;
+			}
+         });
+     });
+};
+var class_id;
+$('#classList').on('change', function(){
+$('#selectSubject').prop("disabled", false);
+class_id = $(this).val();
+data = {class_id:class_id}
+alert(class_id); 
+	 $.ajax({
+         type: "GET",
+         url:"/getSubjectByClass/",
+		 data: data,
+         dataType: "json",
+	 }).done(function(data) {	
+		
+		$("#selectSubject").empty();
+		$("#selectSubject").append(
+		$('<option></option>')
+		.val("0")
+		.html("Please Select")); 	         
+       	$.each(data,function(key,value){
+          subject = value.subject.subject;
+          subejct_id = value.subject.subject_id;	
+          	$("#selectSubject").append(
+            $('<option></option>')
+               .val(subejct_id)
+               .html(subject));
+          	});	
+			var usedNames = {};
+			$("select[id='selectSubject'] > option").each(function () {
+			if(usedNames[this.text]) {
+            $(this).remove();
+			} else {
+            usedNames[this.text] = this.value;
+			}
+         });			
+	  });
+
+});
+var class_subject_id;
+$('#selectSubject').on('change', function(){
+alert("in Subject Change");
+var classDropdownId = window.class_id;
+alert(classDropdownId);
+var subjectDropdownId = $(this).val();
+alert(subjectDropdownId);
+data = {classDropdownId:classDropdownId,subjectDropdownId:subjectDropdownId};
+
+	 $.ajax({
+         type: "GET",
+         url:"/getClassSubjectId/",
+		 data: data,
+         dataType: "json",
+	 }).done(function(data) {
+	 $.each(data,function(key,value){
+	 class_subject_id = value.class_subject_id;
+	 alert("This is class SubjectId-- " + class_subject_id);
+	 examId = window.examTypeId;
+	 alert(examId);
+	 getSyllabusId(class_subject_id,examId)
+	   });
+    });
+});
+syllabusId = [];
+function getSyllabusId(class_subject_id,examId){
+alert("In final function");
+classSubjectId = window.class_subject_id;
+alert("In -- " + classSubjectId);
+examtypeId = window.examId;
+alert("In -- " + examtypeId);
+data = {classSubjectId:classSubjectId,examtypeId:examtypeId};
+	 $.ajax({
+         type: "GET",
+         url:"/getSyllabusId/",
+		 data: data,
+         dataType: "json",
+	  }).done(function(data) {
+		 syllabusId = [];
+	  	 var j =0;
+		 $.each(data,function(key,value){
+		 syllabusId[j] = value.syllabus_id;
+		 alert("syllabusId's are -- " + syllabusId);
+		 j++;
+		 });
+		 alert("Sending ExamType -- " + examtypeId);
+		 getExamtypeSyllabusId(syllabusId,examtypeId)
+	});
+};
+
+examTypeSyllabusId = [];
+function getExamtypeSyllabusId(syllabusId,examtypeId){
+alert("in exam type syllabus id funcion")
+syllabusInfo = window.syllabusId;
+alert(syllabusInfo);
+examID = window.examId;
+alert(examID);
+data={syllabusInfo:syllabusInfo,examID:examID};
+	 $.ajax({
+         type: "GET",
+         url:"/getExamTypeSyllabusId/",
+		 data: data,
+         dataType: "json",
+	  }).done(function(data) {
+		 examTypeSyllabusId = [];
+	  	 var j =0;
+		 $.each(data,function(key,value){
+		 examTypeSyllabusId[j] = value.exmaType_syll_id;
+		 alert("examTypeSyllabusId's are -- " + examTypeSyllabusId);
+		 j++;
+		 });
+	 });
+};
+
+$("#getReport").on("click", function() {
+alert("in click function");
+class_sub_syll_id = window.examTypeSyllabusId;
+alert("This is class_sub_syll_id--" + class_sub_syll_id);
+var data={'class_sub_syll_id[]':class_sub_syll_id};
+var url='/getExamScheduleInfo/';
+getAttendenceResultList(url,data)
+
+
+});
+
+
+
+
+
+</script>
+<!-- Main content -->
+<section class="content">
+	<div class="row">
+		<div class="col-xs-12">
+			<div class="box">
+				<div class="box-header">
+					<h3 class="box-title">View Exam Schedule </h3>
+				
+				<div class="col-sm-12" style="margin-top:20px;">
+						<div class="col-sm-3">
+							<label>Select ExamType</label> <select class="form-control"
+								id="examTypeList">
+
+							</select>
+						</div>
+						<div class="col-sm-3">
+							<label>Select Class</label> <select class="form-control"
+								id="classList">
+
+							</select>
+						</div>
+						<div class="col-sm-3">
+							<label>Select Subject</label> <select class="form-control"
+								id="selectSubject">
+
+							</select>
+						</div>
+						<div class="col-sm-2 form-group">
+						  <button type="button" class="btn btn-primary btn-md form-control col-sm-3" id="getReport" style="margin-top: 23px;" name="getReport"> Get Report </button> 
+						</div>
+						
+					</div>
+				</div>
+				<div class="box-body" id="AResult" style="display:none;" >
+					{% render_table examList %}
+				</div>
+				<!-- /.box-body -->
+			</div>
+			<!-- /.box -->
+		</div>
+		<!-- /.col -->
+	</div>
+	<!-- /.row -->
+</section>
+<!-- /.content -->

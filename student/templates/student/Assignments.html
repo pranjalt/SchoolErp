@@ -1,0 +1,342 @@
+{% load table_tags %} {% load staticfiles %}
+<link href="{% static 'css/datepicker3.css' %}" rel="stylesheet">
+<link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+<!-- <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css"> -->
+
+<script src="{% static 'js/jQuery-2.1.4.min.js' %}"></script>
+<script src="{% static 'js/bootstrap.min.js' %}"></script>
+<script src="{% static 'js/commonUtils.js' %}"></script>
+<script src="{% static 'js/bootstrap-datepicker.js' %}"></script>
+
+<style type="text/css">
+.modal.modal-wide .modal-dialog {
+	width: 70%;
+}
+
+.modal-wide .modal-body {
+	overflow-y: auto;
+}
+</style>
+
+<script>
+
+var classSubSyll;
+
+$(document).ready(function(){
+	$('.datepkr').datepicker();
+	
+	$('#idClassAssgmnt').addClass('form-control');
+	$('#idSubject').addClass('form-control');
+	$('#idSyllabus').addClass('form-control');
+	$('#idSyllabus').prop("disabled", true);
+	$('#idSubject').prop("disabled", true);
+	
+	$('#addAssignmentModal').on('hidden.bs.modal', function () {
+		   tab_handler('Assignments');
+	});
+	
+	$('#deleteAssignmentModal').on('hidden.bs.modal', function () {
+		   tab_handler('Assignments');
+	});
+	
+	$("#idClassAssgmnt").on("change", function() { 
+		classId=$(this).find(':selected').val();
+		alert(classId);
+		getSubjectSyllabusDetails(classId);
+		//for first occured value in opt before onchange fun
+	});
+	
+	$('#idSubject').on('change',function(){
+			alert("in on change function");
+			subjectId=$(this).find(':selected').val();
+			data = classSubSyll
+			$('#idSyllabus').empty();
+			$.each(data,function(key,value){ 
+				
+				if(value.subject.subject_id == subjectId)
+				{
+					console.log(value.syllabus);
+					$('#idSyllabus').append('<option value="'+value.syllabus_id+'">'+value.syllabus+'</option>');
+					
+
+				}else{
+					return;
+				}
+			});
+		
+	});
+	
+	$("#idSyllabus").on("change", function() { 
+		var syllabus = $("#idSyllabus option:selected").val();
+		$('#idAssSyllabus').val(syllabus);
+	});
+	
+	$(".fa-file-text").on("click", function() {
+		alert("hit view");
+		$('#addAssignmentModal').modal('show'); 	
+		assignmentId = $(this).closest('tr').find('td:eq(0)').html();
+		var url= '/viewAssignment/'+'?assignmentId='+assignmentId;
+		viewAssignmentFun(url);
+		$('.classViewAccess').prop("disabled", true);
+		$('#saveAssigmntBtn').prop('disabled',true);
+		
+	});
+	
+	$(".fa-trash-o").on("click", function() {
+		alert("hit delete");
+		assignmentId = $(this).closest('tr').find('td:eq(0)').html();
+		$("#yesDelAssignment").on("click", function(){
+			var url = '/deleteAssignment/'+'?assignmentId='+assignmentId;
+		 	$
+			.ajax({
+				url : url,
+				type : "GET",
+				dataType : {},}) 
+			    .done(function(data) {
+			    	alert("after delete");
+			    	
+			    });
+		 });
+	  });
+	
+	$('.fa-edit').on("click",function(){
+		alert("hit edit");
+		$('#addAssignmentModal').modal('show'); 
+		assignmentId = $(this).closest('tr').find('td:eq(0)').html();
+		var url= '/viewAssignment/'+'?assignmentId='+assignmentId;
+		$('#action_type').val("edit");
+		viewAssignmentFun(url);
+		
+	});
+	
+});
+
+
+function getSubjectSyllabusDetails(classId){
+	alert("in ajax funtion getSubjectSyllabusDetails"+classId);
+	$.ajax({
+		  method: "GET",
+		  url: '/getSubjectSyllabusDetails/'+'?classId='+classId,
+		  data: {},
+		  dataType:'json',
+		})
+		 .done(function( data ) {
+			  console.log(data);
+			  $('#idSubject').prop("disabled", false);
+			  $('#idSubject').empty();
+			  $('#idSyllabus').prop("disabled", false);
+			  $('#idSyllabus').empty();
+			  classSubSyll = data;
+			  var ids=[];
+			  $.each(data,function(key,value){ 
+				    //$("#idSubject option:first").text('Please Select');
+				  	$('#idSyllabus').append('<option value="'+value.syllabus_id+'">'+value.syllabus+'</option>');
+				  	// temp code 
+				  		var syll = $("#idSyllabus option:selected").val();		
+						$('#idAssSyllabus').val(syll);
+				  	// temp codde end
+			  		if(ids[value.subject.subject_id]){
+			  			return
+			  		}
+			  		else{
+			  			$('#idSubject').append('<option value="'+value.subject.subject_id+'">'+value.subject.subject+'</option>');
+			  			ids.push(value.subject.subject_id);
+			  			alert(ids);
+			  		}
+				  	
+			});
+			 
+			  selectedSub=$("#idSubject option:first").val()
+			  alert("selected subject"+selectedSub);
+		  })	  	  
+};
+
+function viewAssignmentFun(url)
+{
+	$
+	.ajax({
+		url : url,
+		type : "GET",
+		dataType : 'json',}) 
+		.done(function(data) {
+			alert("in view sucess function");
+			$('#assignment_id').val(data.assignment.assignment_id);
+			alert(data.assignment.to_date);
+			$('#idFromDate').val(data.assignment.to_date);
+			$('#idTodate').val(data.assignment.from_date);
+			$('#idAssgnment').val(data.assignment.assignment_description);	
+			$('#idAssSyllabus').val(data.assignment.syllabus);
+			$('#idClassAssgmnt').append('<option selected=selected value="' + data.classVal.class_id + '">'+data.classVal.class_field+'</option>');
+      		$('#idSubject').append('<option selected=selected value="' + data.subject.subject_id + '">'+data.subject.subject+'</option>');
+      		$('#idSyllabus').append('<option selected=selected value="' + data.syllabus.syllabus_id + '">'+data.syllabus.syllabus+'</option>');
+
+		});
+	
+}
+
+function saveAssignmentFunction()
+{
+	var formData = $('#AssignmentForm').serialize();
+    var url =  $('#AssignmentForm').attr('action');
+    alert("in save fun");
+    $.post(url,formData, function (data) {
+   	console.log(data); 
+   	alert("success");
+    }); 
+}
+
+
+</script>
+<div class="col-md-3 col-sm-6 col-xs-12"
+	style="float: right; width: 30%" data-toggle="modal"
+	data-target="#addAssignmentModal">
+	<div class="info-box">
+		<span class="info-box-icon bg-green"><i
+			class="fa fa-plus-circle"></i></span>
+
+		<div class="info-box-content" id="addAssignment"
+			style="padding: 34px 58px; margin-left: 70px; width: 100%;">
+			<span class="info-box-text">Add assignment</span>
+		</div>
+		<!-- /.info-box-content -->
+	</div>
+	<!-- /.info-box -->
+</div>
+
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteAssignmentModal" tabindex="-1"
+	role="dialog" aria-labelledby="myModalLabel">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal"
+					aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+				<h4 class="modal-title" id="myModalLabel">Are you sure you want
+					to Delete Assignment?</h4>
+			</div>
+			<div class="modal-body">
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" id="yesDelAssignment"
+						data-dismiss="modal">Yes</button>
+					<button type="button" class="btn btn-primary" id="noDelAssignment"
+						name="no" data-dismiss="modal">No</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Add assignment Modal -->
+<div class="modal fade modal-wide" id="addAssignmentModal" tabindex="-1"
+	role="dialog" aria-labelledby="myModalLabel">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal"
+					aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+				<h4 class="modal-title" id="myModalLabel">Add New Assignment</h4>
+			</div>
+			<div class="modal-body">
+				<form role="form" id="AssignmentForm" method="POST"
+					action="{% url 'assignment' %}">
+					<input type="hidden" name="action_type" id="action_type"
+						value="add" /> <input type="hidden" name="assignment_id"
+						id="assignment_id" value="" /> {% csrf_token %}
+					<!-- {{ AddressFormSet.management_form }} -->
+					<!-- text input -->
+					<div id="loadForm">
+						<div class="container">
+
+							<div class="col-lg-12">
+								<div class="row">
+
+									<div class="col-sm-12">
+
+										<div class="row">
+											<div class="col-sm-3 form-group">
+												
+												<label>From Date</label> 
+												<!-- <div class="input-group date datepkr" data-provide="datepicker">
+													<input type="text" class="form-control">
+													<div class="input-group-addon">
+														<span class="glyphicon glyphicon-th"></span>
+													</div>
+												</div> -->
+												<!-- <input type="date" id="date" class="date"> -->
+												 {{assgmntForm.from_date}} 
+											
+											</div>
+
+											<div class="col-sm-3 form-group">
+												<label class="dateAlert" id="idDateAlert" style="display:none;"> date is not valid</label>
+											</div>
+
+											<div class="col-sm-3 form-group">
+												<label>To Date</label> {{assgmntForm.to_date}}
+											</div>
+										</div>
+
+										<div class="row">
+											<div class="col-sm-3 form-group">
+												<label>Class</label> {{clsform.classVal}}
+											</div>
+											<div class="col-sm-3 form-group">
+												<label>Subject</label> {{subForm.subject}}
+											</div>
+											<div class="col-sm-3 form-group">
+												<label>Syllabus</label> {{SyllForm.syllabus}}
+											</div>
+											{{assgmntForm.syllabus}}
+										</div>
+
+										<div class="row">
+											<div class="col-sm-9 form-group">
+												<label>Assignment</label>
+												{{assgmntForm.assignment_description}}
+											</div>
+										</div>
+
+									</div>
+								</div>
+							</div>
+
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" id="idClose"
+							data-dismiss="modal">Close</button>
+						<button type="button" class="btn btn-primary" id="saveAssigmntBtn"
+							name="save" onClick="saveAssignmentFunction();"
+							data-dismiss="modal">Save</button>
+					</div>
+				</form>
+			</div>
+
+		</div>
+	</div>
+</div>
+
+
+<!-- Main content -->
+<section class="content">
+	<div class="row">
+		<div class="col-xs-12">
+			<div class="box">
+				<div class="box-header">
+					<h3 class="box-title">List of All Assignment</h3>
+				</div>
+				<!-- /.box-header -->
+				<div class="box-body">{%render_table assignmentTable%}</div>
+				<!-- /.box-body -->
+			</div>
+			<!-- /.box -->
+		</div>
+		<!-- /.col -->
+	</div>
+	<!-- /.row -->
+</section>
